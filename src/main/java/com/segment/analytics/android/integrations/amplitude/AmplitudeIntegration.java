@@ -4,6 +4,7 @@ import com.amplitude.api.AmplitudeClient;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
 import com.segment.analytics.ValueMap;
+import com.segment.analytics.integrations.GroupPayload;
 import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
@@ -121,6 +122,12 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     amplitude.logRevenue(productId, quantity, revenue, receipt, receiptSignature);
     logger.verbose("AmplitudeClient.getInstance().logRevenue(%s, %s, %s, %s, %s);", productId,
         quantity, revenue, receipt, receiptSignature);
+  }
+
+  @Override public void group(GroupPayload group) {
+    String groupId = group.groupId();
+    amplitude.setGroup("[Segment] Group", groupId);
+    logger.verbose("AmplitudeClient.getInstance().setGroup([Segment] Group, %s);", groupId);
   }
 
   @Override public void flush() {
