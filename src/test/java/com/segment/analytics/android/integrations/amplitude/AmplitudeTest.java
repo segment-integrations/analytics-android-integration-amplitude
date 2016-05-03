@@ -7,9 +7,11 @@ import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.core.tests.BuildConfig;
+import com.segment.analytics.integrations.GroupPayload;
 import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.TrackPayload;
+import com.segment.analytics.test.GroupPayloadBuilder;
 import com.segment.analytics.test.IdentifyPayloadBuilder;
 import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
@@ -170,6 +172,15 @@ public class AmplitudeTest {
 
     integration.screen(new ScreenPayloadBuilder().category("bar").name("baz").build());
     verifyAmplitudeLoggedEvent("Viewed baz Screen", new JSONObject());
+  }
+
+  @Test public void group() {
+    Traits traits = createTraits("foo").putAge(20).putFirstName("bar");
+    GroupPayload payload = new GroupPayloadBuilder().groupId("testGroupId").traits(traits).build();
+
+    integration.group(payload);
+
+    verify(amplitude).setGroup("[Segment] Group", "testGroupId");
   }
 
   @Test public void flush() {
