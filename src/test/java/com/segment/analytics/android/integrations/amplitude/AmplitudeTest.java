@@ -192,7 +192,7 @@ public class AmplitudeTest {
   @Test public void reset() {
     integration.reset();
 
-    verifyNoMoreInteractions(amplitude);
+    verify(amplitude).clearUserProperties();
   }
 
   private void verifyAmplitudeLoggedEvent(String event, JSONObject jsonObject) {

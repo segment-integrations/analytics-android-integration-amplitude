@@ -136,4 +136,11 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     amplitude.uploadEvents();
     logger.verbose("AmplitudeClient.getInstance().uploadEvents();");
   }
+
+  @Override public void reset() {
+    super.reset();
+
+    amplitude.clearUserProperties();
+    logger.verbose("AmplitudeClient.getInstance().clearUserProperties();");
+  }
 }
