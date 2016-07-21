@@ -2,6 +2,7 @@ package com.segment.analytics.android.integrations.amplitude;
 
 import android.app.Application;
 import com.amplitude.api.AmplitudeClient;
+import com.amplitude.api.Revenue;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
@@ -17,6 +18,7 @@ import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -102,6 +104,22 @@ public class AmplitudeTest {
 
   @Test public void trackWithRevenue() {
     Properties properties = new Properties().putRevenue(20)
+            .putValue("productId", "bar")
+            .putValue("quantity", 10)
+            .putValue("receipt", "baz")
+            .putValue("receiptSignature", "qux");
+    TrackPayload trackPayload =
+            new TrackPayloadBuilder().event("foo").properties(properties).build();
+
+    integration.track(trackPayload);
+    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()));
+    verify(amplitude).logRevenue("bar", 10, 20, "baz", "qux");
+  }
+
+  @Test public void trackWithRevenueV2() {
+    integration.useLogRevenueV2 = true;
+    // first case missing prices field
+    Properties properties = new Properties().putRevenue(20)
         .putValue("productId", "bar")
         .putValue("quantity", 10)
         .putValue("receipt", "baz")
@@ -110,9 +128,33 @@ public class AmplitudeTest {
         new TrackPayloadBuilder().event("foo").properties(properties).build();
 
     integration.track(trackPayload);
-
     verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()));
-    verify(amplitude).logRevenue("bar", 10, 20, "baz", "qux");
+
+    Revenue expectedRevenue = new Revenue().setProductId("bar")
+        .setPrice(20)
+        .setQuantity(1)
+        .setReceipt("baz", "qux")
+        .setEventProperties(properties.toJsonObject());
+    verify(amplitude).logRevenueV2(revenueEq(expectedRevenue));
+
+    // second case has price and quantity
+    properties = new Properties().putRevenue(20)
+            .putValue("productId", "bar")
+            .putValue("quantity", 10)
+            .putValue("price", 2.00)
+            .putValue("receipt", "baz")
+            .putValue("receiptSignature", "qux");
+    trackPayload = new TrackPayloadBuilder().event("foo").properties(properties).build();
+
+    integration.track(trackPayload);
+    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()));
+
+    expectedRevenue = new Revenue().setProductId("bar")
+            .setPrice(2)
+            .setQuantity(10)
+            .setReceipt("baz", "qux")
+            .setEventProperties(properties.toJsonObject());
+    verify(amplitude).logRevenueV2(revenueEq(expectedRevenue));
   }
 
   @Test public void identify() {
@@ -213,6 +255,27 @@ public class AmplitudeTest {
     @Override public boolean matchesSafely(JSONObject jsonObject) {
       // todo: this relies on having the same order
       return expected.toString().equals(jsonObject.toString());
+    }
+
+    @Override public void describeTo(Description description) {
+      description.appendText(expected.toString());
+    }
+  }
+
+  public static Revenue revenueEq(Revenue expected) {
+    return argThat(new RevenueMatcher(expected));
+  }
+
+  private static class RevenueMatcher extends TypeSafeMatcher<Revenue> {
+    private final Revenue expected;
+
+    private RevenueMatcher(Revenue expected) {
+      this.expected = expected;
+    }
+
+    @Override public boolean matchesSafely(Revenue revenue) {
+      // Revenue class has a custom equals method
+      return expected.equals(revenue);
     }
 
     @Override public void describeTo(Description description) {

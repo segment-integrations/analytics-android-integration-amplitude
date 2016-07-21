@@ -1,6 +1,7 @@
 package com.segment.analytics.android.integrations.amplitude;
 
 import com.amplitude.api.AmplitudeClient;
+import com.amplitude.api.Revenue;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
 import com.segment.analytics.ValueMap;
@@ -10,6 +11,7 @@ import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
+
 import org.json.JSONObject;
 
 import static com.segment.analytics.internal.Utils.isNullOrEmpty;
@@ -42,6 +44,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   boolean trackAllPages;
   boolean trackCategorizedPages;
   boolean trackNamedPages;
+  boolean useLogRevenueV2;
 
   // Using PowerMockito fails with https://cloudup.com/c5JPuvmTCaH. So we introduce a provider
   // abstraction to mock what AmplitudeClient.getInstance() returns.
@@ -60,6 +63,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     trackAllPages = settings.getBoolean("trackAllPages", false);
     trackCategorizedPages = settings.getBoolean("trackCategorizedPages", false);
     trackNamedPages = settings.getBoolean("trackNamedPages", false);
+    useLogRevenueV2 = settings.getBoolean("useLogRevenueV2", false);
     logger = analytics.logger(AMPLITUDE_KEY);
 
     String apiKey = settings.getString("apiKey");
@@ -111,17 +115,53 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     amplitude.logEvent(name, propertiesJSON);
     logger.verbose("AmplitudeClient.getInstance().logEvent(%s, %s);", name, propertiesJSON);
 
-    double revenue = properties.getDouble("revenue", -1);
-    if (revenue == -1) {
-      return;
+    // use containsKey since revenue can have negative values
+    boolean hasRevenue = properties.containsKey("revenue");
+    if (useLogRevenueV2) {
+      boolean hasPrice = properties.containsKey("price");
+      if (!hasPrice && !hasRevenue) {
+        return;
+      }
+
+      double price = properties.getDouble("price", -1);
+      int quantity = properties.getInt("quantity", 1);
+      // if no price, fallback to using revenue
+      if (!hasPrice) {
+        price = properties.getDouble("revenue", -1);
+        quantity = 1;
+      }
+
+      Revenue ampRevenue = new Revenue().setPrice(price).setQuantity(quantity);
+      if (properties.containsKey("productId")) {
+        ampRevenue.setProductId(properties.getString("productId"));
+      }
+      if (properties.containsKey("revenueType")) {
+        ampRevenue.setRevenueType(properties.getString("revenueType"));
+      }
+      if (properties.containsKey("receipt") && properties.containsKey("receiptSignature")) {
+        ampRevenue.setReceipt(
+                properties.getString("receipt"),
+                properties.getString("receiptSignature")
+        );
+      }
+      ampRevenue.setEventProperties(propertiesJSON);
+      amplitude.logRevenueV2(ampRevenue);
+      logger.verbose("AmplitudeClient.getInstance().logRevenueV2(%s, %s);", price, quantity);
+
+    } else {
+      // legacy method of handling revenue - confusing schema where total rev = rev * quantity
+      if (!hasRevenue) {
+        return;
+      }
+      double revenue = properties.getDouble("revenue", -1);
+      String productId = properties.getString("productId");
+      int quantity = properties.getInt("quantity", 0);
+      String receipt = properties.getString("receipt");
+      String receiptSignature = properties.getString("receiptSignature");
+      amplitude.logRevenue(productId, quantity, revenue, receipt, receiptSignature);
+      logger.verbose("AmplitudeClient.getInstance().logRevenue(%s, %s, %s, %s, %s);", productId,
+              quantity, revenue, receipt, receiptSignature);
     }
-    String productId = properties.getString("productId");
-    int quantity = properties.getInt("quantity", 0);
-    String receipt = properties.getString("receipt");
-    String receiptSignature = properties.getString("receiptSignature");
-    amplitude.logRevenue(productId, quantity, revenue, receipt, receiptSignature);
-    logger.verbose("AmplitudeClient.getInstance().logRevenue(%s, %s, %s, %s, %s);", productId,
-        quantity, revenue, receipt, receiptSignature);
   }
 
   @Override public void group(GroupPayload group) {
