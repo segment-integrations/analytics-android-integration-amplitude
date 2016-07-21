@@ -1,4 +1,11 @@
 
+Version 1.1.0 (July 21st, 2016)
+==============================
+*(Supports analytics-android 4.0.+ and Amplitude 2.9.2+)*
+
+  * Updating Amplitude dependency to 2.9.2.
+  * Support `useLogRevenueV2` option.
+
 Version 1.0.2 (May 2nd, 2016)
 ==============================
 *(Supports analytics-android 4.0.+ and Amplitude 2.7.1+)*
