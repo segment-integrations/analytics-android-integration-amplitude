@@ -116,51 +116,44 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     logger.verbose("AmplitudeClient.getInstance().logEvent(%s, %s);", name, propertiesJSON);
 
     // use containsKey since revenue can have negative values
-    boolean hasRevenue = properties.containsKey("revenue");
-    if (useLogRevenueV2) {
-      boolean hasPrice = properties.containsKey("price");
-      if (!hasPrice && !hasRevenue) {
-        return;
-      }
+    if (properties.containsKey("revenue")) {
+      if (useLogRevenueV2) {
+        double price = properties.getDouble("price", -1);
+        int quantity = properties.getInt("quantity", 1);
 
-      double price = properties.getDouble("price", -1);
-      int quantity = properties.getInt("quantity", 1);
-      // if no price, fallback to using revenue
-      if (!hasPrice) {
-        price = properties.getDouble("revenue", -1);
-        quantity = 1;
-      }
+        // if no price, fallback to using revenue
+        if (!properties.containsKey("price")) {
+          price = properties.getDouble("revenue", -1);
+          quantity = 1;
+        }
 
-      Revenue ampRevenue = new Revenue().setPrice(price).setQuantity(quantity);
-      if (properties.containsKey("productId")) {
-        ampRevenue.setProductId(properties.getString("productId"));
+        Revenue ampRevenue = new Revenue().setPrice(price).setQuantity(quantity);
+        if (properties.containsKey("productId")) {
+          ampRevenue.setProductId(properties.getString("productId"));
+        }
+        if (properties.containsKey("revenueType")) {
+          ampRevenue.setRevenueType(properties.getString("revenueType"));
+        }
+        if (properties.containsKey("receipt") && properties.containsKey("receiptSignature")) {
+          ampRevenue.setReceipt(
+                  properties.getString("receipt"),
+                  properties.getString("receiptSignature")
+          );
+        }
+        ampRevenue.setEventProperties(propertiesJSON);
+        amplitude.logRevenueV2(ampRevenue);
+        logger.verbose("AmplitudeClient.getInstance().logRevenueV2(%s, %s);", price, quantity);
+      } else {
+        // fallback to using logRevenue v1
+        double revenue = properties.getDouble("revenue", -1);
+        String productId = properties.getString("productId");
+        int quantity = properties.getInt("quantity", 0);
+        String receipt = properties.getString("receipt");
+        String receiptSignature = properties.getString("receiptSignature");
+        amplitude.logRevenue(productId, quantity, revenue, receipt, receiptSignature);
+        logger.verbose("AmplitudeClient.getInstance().logRevenue(%s, %s, %s, %s, %s);", productId,
+                quantity, revenue, receipt, receiptSignature);
       }
-      if (properties.containsKey("revenueType")) {
-        ampRevenue.setRevenueType(properties.getString("revenueType"));
-      }
-      if (properties.containsKey("receipt") && properties.containsKey("receiptSignature")) {
-        ampRevenue.setReceipt(
-                properties.getString("receipt"),
-                properties.getString("receiptSignature")
-        );
-      }
-      ampRevenue.setEventProperties(propertiesJSON);
-      amplitude.logRevenueV2(ampRevenue);
-      logger.verbose("AmplitudeClient.getInstance().logRevenueV2(%s, %s);", price, quantity);
-
-    } else {
-      // legacy method of handling revenue - confusing schema where total rev = rev * quantity
-      if (!hasRevenue) {
-        return;
-      }
-      double revenue = properties.getDouble("revenue", -1);
-      String productId = properties.getString("productId");
-      int quantity = properties.getInt("quantity", 0);
-      String receipt = properties.getString("receipt");
-      String receiptSignature = properties.getString("receiptSignature");
-      amplitude.logRevenue(productId, quantity, revenue, receipt, receiptSignature);
-      logger.verbose("AmplitudeClient.getInstance().logRevenue(%s, %s, %s, %s, %s);", productId,
-              quantity, revenue, receipt, receiptSignature);
     }
   }
 
