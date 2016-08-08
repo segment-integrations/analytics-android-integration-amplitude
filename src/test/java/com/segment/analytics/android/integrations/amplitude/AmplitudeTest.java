@@ -155,6 +155,18 @@ public class AmplitudeTest {
             .setReceipt("baz", "qux")
             .setEventProperties(properties.toJsonObject());
     verify(amplitude).logRevenueV2(revenueEq(expectedRevenue));
+
+    // third case has price but no revenue
+    properties = new Properties().putValue("productId", "bar")
+            .putValue("quantity", 10)
+            .putValue("price", 2.00)
+            .putValue("receipt", "baz")
+            .putValue("receiptSignature", "qux");
+    trackPayload = new TrackPayloadBuilder().event("foo").properties(properties).build();
+    integration.track(trackPayload);
+    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()));
+
+    verifyNoMoreInteractions(amplitude);
   }
 
   @Test public void identify() {
