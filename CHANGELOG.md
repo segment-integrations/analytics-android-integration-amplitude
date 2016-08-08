@@ -1,4 +1,10 @@
 
+Version 1.1.0 (August 8th, 2016)
+==============================
+*(Supports analytics-android 4.0.+ and Amplitude 2.9.2+)*
+
+  * Fix handling revenue correctly with `useLogRevenueV2` option.
+
 Version 1.1.0 (July 21st, 2016)
 ==============================
 *(Supports analytics-android 4.0.+ and Amplitude 2.9.2+)*
