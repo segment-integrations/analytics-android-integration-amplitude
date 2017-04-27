@@ -173,7 +173,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   @Override public void reset() {
     super.reset();
 
-    amplitude.clearUserProperties();
-    logger.verbose("AmplitudeClient.getInstance().clearUserProperties();");
+    amplitude.regenerateDeviceId();
+    logger.verbose("AmplitudeClient.getInstance().regenerateDeviceId();");
   }
 }
