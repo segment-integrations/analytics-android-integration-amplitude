@@ -1,5 +1,11 @@
 
-Version 1.1.0 (August 8th, 2016)
+Version 1.1.2 (April 27, 2017)
+==============================
+*(Supports analytics-android 4.0.+ and Amplitude 2.13.3+)*
+
+  * [Fix](https://github.com/segment-integrations/analytics-android-integration-amplitude/pull/15): `reset` method implementation so that it calls `regenerateDeviceId` instead of `clearUserProperties`.
+
+Version 1.1.1 (August 8th, 2016)
 ==============================
 *(Supports analytics-android 4.0.+ and Amplitude 2.9.2+)*
 
