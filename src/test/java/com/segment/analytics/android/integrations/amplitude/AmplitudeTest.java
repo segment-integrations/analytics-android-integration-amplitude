@@ -33,6 +33,7 @@ import static com.segment.analytics.Utils.createTraits;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -246,7 +247,10 @@ public class AmplitudeTest {
   @Test public void reset() {
     integration.reset();
 
-    verify(amplitude).clearUserProperties();
+    verify(amplitude).regenerateDeviceId();
+
+    // Previously we called clearUserProperties() which was incorrect.
+    verify(amplitude, never()).clearUserProperties();
   }
 
   private void verifyAmplitudeLoggedEvent(String event, JSONObject jsonObject) {
