@@ -18,19 +18,18 @@ import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.robolectric.RobolectricGradleTestRunner;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
 import static com.segment.analytics.Utils.createTraits;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
@@ -39,15 +38,15 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
 public class AmplitudeTest {
   @Mock Application application;
   @Mock AmplitudeClient amplitude;
   @Mock Analytics analytics;
-  AmplitudeIntegration integration;
+  private AmplitudeIntegration integration;
 
-  AmplitudeIntegration.Provider mockProvider = new AmplitudeIntegration.Provider() {
+  private AmplitudeIntegration.Provider mockProvider = new AmplitudeIntegration.Provider() {
     @Override public AmplitudeClient get() {
       return amplitude;
     }

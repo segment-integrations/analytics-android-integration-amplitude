@@ -25,18 +25,20 @@ import static com.segment.analytics.internal.Utils.isNullOrEmpty;
  * @see <a href="https://github.com/amplitude/Amplitude-Android">Amplitude Android SDK</a>
  */
 public class AmplitudeIntegration extends Integration<AmplitudeClient> {
-  public static final Factory FACTORY = new Factory() {
-    @Override public Integration<?> create(ValueMap settings, Analytics analytics) {
-      return new AmplitudeIntegration(Provider.REAL, analytics, settings);
-    }
+  public static final Factory FACTORY =
+      new Factory() {
+        @Override
+        public Integration<?> create(ValueMap settings, Analytics analytics) {
+          return new AmplitudeIntegration(Provider.REAL, analytics, settings);
+        }
 
-    @Override public String key() {
-      return AMPLITUDE_KEY;
-    }
-  };
+        @Override
+        public String key() {
+          return AMPLITUDE_KEY;
+        }
+      };
   private static final String AMPLITUDE_KEY = "Amplitude";
   private static final String VIEWED_EVENT_FORMAT = "Viewed %s Screen";
-
 
   final AmplitudeClient amplitude;
   final Logger logger;
@@ -51,11 +53,13 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   interface Provider {
     AmplitudeClient get();
 
-    Provider REAL = new Provider() {
-      @Override public AmplitudeClient get() {
-        return AmplitudeClient.getInstance();
-      }
-    };
+    Provider REAL =
+        new Provider() {
+          @Override
+          public AmplitudeClient get() {
+            return AmplitudeClient.getInstance();
+          }
+        };
   }
 
   AmplitudeIntegration(Provider provider, Analytics analytics, ValueMap settings) {
@@ -78,11 +82,13 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     logger.verbose("AmplitudeClient.getInstance().trackSessionEvents(%s);", trackSessionEvents);
   }
 
-  @Override public AmplitudeClient getUnderlyingInstance() {
+  @Override
+  public AmplitudeClient getUnderlyingInstance() {
     return amplitude;
   }
 
-  @Override public void identify(IdentifyPayload identify) {
+  @Override
+  public void identify(IdentifyPayload identify) {
     super.identify(identify);
 
     String userId = identify.userId();
@@ -94,7 +100,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     logger.verbose("AmplitudeClient.getInstance().setUserProperties(%s);", traits);
   }
 
-  @Override public void screen(ScreenPayload screen) {
+  @Override
+  public void screen(ScreenPayload screen) {
     super.screen(screen);
     if (trackAllPages) {
       event(String.format(VIEWED_EVENT_FORMAT, screen.event()), screen.properties());
@@ -105,7 +112,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     }
   }
 
-  @Override public void track(TrackPayload track) {
+  @Override
+  public void track(TrackPayload track) {
     super.track(track);
     event(track.event(), track.properties());
   }
@@ -136,9 +144,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
         }
         if (properties.containsKey("receipt") && properties.containsKey("receiptSignature")) {
           ampRevenue.setReceipt(
-                  properties.getString("receipt"),
-                  properties.getString("receiptSignature")
-          );
+              properties.getString("receipt"), properties.getString("receiptSignature"));
         }
         ampRevenue.setEventProperties(propertiesJSON);
         amplitude.logRevenueV2(ampRevenue);
@@ -151,26 +157,30 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
         String receipt = properties.getString("receipt");
         String receiptSignature = properties.getString("receiptSignature");
         amplitude.logRevenue(productId, quantity, revenue, receipt, receiptSignature);
-        logger.verbose("AmplitudeClient.getInstance().logRevenue(%s, %s, %s, %s, %s);", productId,
-                quantity, revenue, receipt, receiptSignature);
+        logger.verbose(
+            "AmplitudeClient.getInstance().logRevenue(%s, %s, %s, %s, %s);",
+            productId, quantity, revenue, receipt, receiptSignature);
       }
     }
   }
 
-  @Override public void group(GroupPayload group) {
+  @Override
+  public void group(GroupPayload group) {
     String groupId = group.groupId();
     amplitude.setGroup("[Segment] Group", groupId);
     logger.verbose("AmplitudeClient.getInstance().setGroup([Segment] Group, %s);", groupId);
   }
 
-  @Override public void flush() {
+  @Override
+  public void flush() {
     super.flush();
 
     amplitude.uploadEvents();
     logger.verbose("AmplitudeClient.getInstance().uploadEvents();");
   }
 
-  @Override public void reset() {
+  @Override
+  public void reset() {
     super.reset();
 
     amplitude.regenerateDeviceId();

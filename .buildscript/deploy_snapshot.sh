@@ -6,7 +6,7 @@
 # http://benlimmer.com/2013/12/26/automatically-publish-javadoc-to-gh-pages-with-travis-ci/
 # and https://github.com/square/javawriter
 
-REPO="analytics-android-integration-amplitude"
+REPO="analytics-android-integration-flurry"
 USERNAME="segment-integrations"
 JDK="oraclejdk8"
 BRANCH="master"
