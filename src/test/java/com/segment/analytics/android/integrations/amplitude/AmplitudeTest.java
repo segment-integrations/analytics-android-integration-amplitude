@@ -229,12 +229,24 @@ public class AmplitudeTest {
   }
 
   @Test public void group() {
-    Traits traits = createTraits("foo").putAge(20).putFirstName("bar");
-    GroupPayload payload = new GroupPayloadBuilder().groupId("testGroupId").traits(traits).build();
+    GroupPayload payload = new GroupPayloadBuilder()
+        .groupId("testGroupId")
+        .build();
 
     integration.group(payload);
 
     verify(amplitude).setGroup("[Segment] Group", "testGroupId");
+  }
+
+  @Test public void groupWithGroupName() {
+    GroupPayload payload = new GroupPayloadBuilder()
+        .groupId("testGroupId")
+        .groupTraits(new Traits().putName("testName"))
+        .build();
+
+    integration.group(payload);
+
+    verify(amplitude).setGroup("testName", "testGroupId");
   }
 
   @Test public void flush() {

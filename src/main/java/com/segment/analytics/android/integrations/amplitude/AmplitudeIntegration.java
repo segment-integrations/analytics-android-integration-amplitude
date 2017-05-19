@@ -1,9 +1,12 @@
 package com.segment.analytics.android.integrations.amplitude;
 
+import static com.segment.analytics.internal.Utils.isNullOrEmpty;
+
 import com.amplitude.api.AmplitudeClient;
 import com.amplitude.api.Revenue;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
+import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.GroupPayload;
 import com.segment.analytics.integrations.IdentifyPayload;
@@ -11,10 +14,7 @@ import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
-
 import org.json.JSONObject;
-
-import static com.segment.analytics.internal.Utils.isNullOrEmpty;
 
 /**
  * Amplitude is an event tracking and segmentation tool for your mobile apps. By analyzing the
@@ -115,6 +115,9 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   @Override
   public void track(TrackPayload track) {
     super.track(track);
+
+
+
     event(track.event(), track.properties());
   }
 
@@ -166,9 +169,21 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
 
   @Override
   public void group(GroupPayload group) {
+    String groupName = null;
+
+    Traits traits = group.traits();
+    if (!isNullOrEmpty(traits)) {
+      groupName = traits.name();
+    }
+
+    if (isNullOrEmpty(groupName)) {
+      groupName = "[Segment] Group";
+    }
+
     String groupId = group.groupId();
-    amplitude.setGroup("[Segment] Group", groupId);
-    logger.verbose("AmplitudeClient.getInstance().setGroup([Segment] Group, %s);", groupId);
+
+    amplitude.setGroup(groupName, groupId);
+    logger.verbose("AmplitudeClient.getInstance().setGroup(%s, %s);", groupName, groupId);
   }
 
   @Override
