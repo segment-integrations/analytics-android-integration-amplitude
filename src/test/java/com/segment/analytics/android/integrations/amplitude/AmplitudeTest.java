@@ -1,9 +1,22 @@
 package com.segment.analytics.android.integrations.amplitude;
 
+import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
+import static com.segment.analytics.Utils.createTraits;
+import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+
 import android.app.Application;
 import com.amplitude.api.AmplitudeClient;
 import com.amplitude.api.Revenue;
 import com.segment.analytics.Analytics;
+import com.segment.analytics.Options;
 import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
@@ -18,6 +31,7 @@ import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,33 +41,23 @@ import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
-import static com.segment.analytics.Utils.createTraits;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isNull;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
-
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
 public class AmplitudeTest {
+
   @Mock Application application;
   @Mock AmplitudeClient amplitude;
   @Mock Analytics analytics;
   private AmplitudeIntegration integration;
-
   private AmplitudeIntegration.Provider mockProvider = new AmplitudeIntegration.Provider() {
-    @Override public AmplitudeClient get() {
+    @Override
+    public AmplitudeClient get() {
       return amplitude;
     }
   };
 
-  @Before public void setUp() {
+  @Before
+  public void setUp() {
     initMocks(this);
 
     when(analytics.getApplication()).thenReturn(application);
@@ -65,11 +69,13 @@ public class AmplitudeTest {
     Mockito.reset(amplitude);
   }
 
-  @Test public void factory() {
+  @Test
+  public void factory() {
     assertThat(AmplitudeIntegration.FACTORY.key()).isEqualTo("Amplitude");
   }
 
-  @Test public void initialize() {
+  @Test
+  public void initialize() {
     integration = new AmplitudeIntegration(mockProvider, analytics,
         new ValueMap().putValue("apiKey", "foo")
             .putValue("trackAllPages", true)
@@ -85,7 +91,8 @@ public class AmplitudeTest {
     verify(amplitude).trackSessionEvents(false);
   }
 
-  @Test public void initializeWithDefaultArguments() {
+  @Test
+  public void initializeWithDefaultArguments() {
     integration =
         new AmplitudeIntegration(mockProvider, analytics, new ValueMap().putValue("apiKey", "foo"));
 
@@ -98,30 +105,56 @@ public class AmplitudeTest {
     verify(amplitude).trackSessionEvents(false);
   }
 
-  @Test public void track() {
+  @Test
+  public void track() {
     Properties properties = new Properties();
 
     integration.track(new TrackPayloadBuilder().event("foo").properties(properties).build());
 
-    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+    verify(amplitude)
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
     verifyNoMoreInteractions(amplitude);
   }
 
-  @Test public void trackWithRevenue() {
+  @Test
+  public void trackWithGroups() throws JSONException {
+    Properties properties = new Properties();
+
+    integration.track(new TrackPayloadBuilder()
+        .event("foo")
+        .properties(properties)
+        .options(new Options()
+            .setIntegrationOptions("Amplitude", new ValueMap()
+                .putValue("groups", new ValueMap().putValue("foo", "bar"))
+            )
+        )
+        .build());
+
+    JSONObject groups = new JSONObject();
+    groups.put("foo", "bar");
+    verify(amplitude)
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), jsonEq(groups));
+    verifyNoMoreInteractions(amplitude);
+  }
+
+  @Test
+  public void trackWithRevenue() {
     Properties properties = new Properties().putRevenue(20)
-            .putValue("productId", "bar")
-            .putValue("quantity", 10)
-            .putValue("receipt", "baz")
-            .putValue("receiptSignature", "qux");
+        .putValue("productId", "bar")
+        .putValue("quantity", 10)
+        .putValue("receipt", "baz")
+        .putValue("receiptSignature", "qux");
     TrackPayload trackPayload =
-            new TrackPayloadBuilder().event("foo").properties(properties).build();
+        new TrackPayloadBuilder().event("foo").properties(properties).build();
 
     integration.track(trackPayload);
-    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+    verify(amplitude)
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
     verify(amplitude).logRevenue("bar", 10, 20, "baz", "qux");
   }
 
-  @Test public void trackWithRevenueV2() {
+  @Test
+  public void trackWithRevenueV2() {
     integration.useLogRevenueV2 = true;
     // first case missing prices field
     Properties properties = new Properties().putRevenue(20)
@@ -133,7 +166,8 @@ public class AmplitudeTest {
         new TrackPayloadBuilder().event("foo").properties(properties).build();
 
     integration.track(trackPayload);
-    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+    verify(amplitude)
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
 
     Revenue expectedRevenue = new Revenue().setProductId("bar")
         .setPrice(20)
@@ -144,37 +178,40 @@ public class AmplitudeTest {
 
     // second case has price and quantity
     properties = new Properties().putRevenue(20)
-            .putValue("productId", "bar")
-            .putValue("quantity", 10)
-            .putValue("price", 2.00)
-            .putValue("receipt", "baz")
-            .putValue("receiptSignature", "qux");
+        .putValue("productId", "bar")
+        .putValue("quantity", 10)
+        .putValue("price", 2.00)
+        .putValue("receipt", "baz")
+        .putValue("receiptSignature", "qux");
     trackPayload = new TrackPayloadBuilder().event("foo").properties(properties).build();
 
     integration.track(trackPayload);
-    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+    verify(amplitude)
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
 
     expectedRevenue = new Revenue().setProductId("bar")
-            .setPrice(2)
-            .setQuantity(10)
-            .setReceipt("baz", "qux")
-            .setEventProperties(properties.toJsonObject());
+        .setPrice(2)
+        .setQuantity(10)
+        .setReceipt("baz", "qux")
+        .setEventProperties(properties.toJsonObject());
     verify(amplitude).logRevenueV2(revenueEq(expectedRevenue));
 
     // third case has price but no revenue
     properties = new Properties().putValue("productId", "bar")
-            .putValue("quantity", 10)
-            .putValue("price", 2.00)
-            .putValue("receipt", "baz")
-            .putValue("receiptSignature", "qux");
+        .putValue("quantity", 10)
+        .putValue("price", 2.00)
+        .putValue("receipt", "baz")
+        .putValue("receiptSignature", "qux");
     trackPayload = new TrackPayloadBuilder().event("foo").properties(properties).build();
     integration.track(trackPayload);
-    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+    verify(amplitude)
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
 
     verifyNoMoreInteractions(amplitude);
   }
 
-  @Test public void identify() {
+  @Test
+  public void identify() {
     Traits traits = createTraits("foo").putAge(20).putFirstName("bar");
     IdentifyPayload payload = new IdentifyPayloadBuilder().traits(traits).build();
 
@@ -184,7 +221,8 @@ public class AmplitudeTest {
     verify(amplitude).setUserProperties(jsonEq(traits.toJsonObject()));
   }
 
-  @Test public void screen() {
+  @Test
+  public void screen() {
     integration.trackAllPages = false;
     integration.trackCategorizedPages = false;
     integration.trackNamedPages = false;
@@ -194,7 +232,8 @@ public class AmplitudeTest {
     verifyNoMoreInteractions(amplitude);
   }
 
-  @Test public void screenTrackNamedPages() {
+  @Test
+  public void screenTrackNamedPages() {
     integration.trackAllPages = false;
     integration.trackCategorizedPages = false;
     integration.trackNamedPages = true;
@@ -206,7 +245,8 @@ public class AmplitudeTest {
     verifyNoMoreInteractions(amplitude);
   }
 
-  @Test public void screenTrackCategorizedPages() {
+  @Test
+  public void screenTrackCategorizedPages() {
     integration.trackAllPages = false;
     integration.trackCategorizedPages = true;
     integration.trackNamedPages = false;
@@ -218,7 +258,8 @@ public class AmplitudeTest {
     verifyNoMoreInteractions(amplitude);
   }
 
-  @Test public void screenTrackAllPages() {
+  @Test
+  public void screenTrackAllPages() {
     integration.trackAllPages = true;
     integration.trackCategorizedPages = false;
     integration.trackNamedPages = false;
@@ -233,7 +274,8 @@ public class AmplitudeTest {
     verifyAmplitudeLoggedEvent("Viewed baz Screen", new JSONObject());
   }
 
-  @Test public void group() {
+  @Test
+  public void group() {
     GroupPayload payload = new GroupPayloadBuilder()
         .groupId("testGroupId")
         .build();
@@ -243,7 +285,8 @@ public class AmplitudeTest {
     verify(amplitude).setGroup("[Segment] Group", "testGroupId");
   }
 
-  @Test public void groupWithGroupName() {
+  @Test
+  public void groupWithGroupName() {
     GroupPayload payload = new GroupPayloadBuilder()
         .groupId("testGroupId")
         .groupTraits(new Traits().putName("testName"))
@@ -254,13 +297,15 @@ public class AmplitudeTest {
     verify(amplitude).setGroup("testName", "testGroupId");
   }
 
-  @Test public void flush() {
+  @Test
+  public void flush() {
     integration.flush();
 
     verify(amplitude).uploadEvents();
   }
 
-  @Test public void reset() {
+  @Test
+  public void reset() {
     integration.reset();
 
     verify(amplitude).regenerateDeviceId();
@@ -278,18 +323,21 @@ public class AmplitudeTest {
   }
 
   private static class JSONObjectMatcher extends TypeSafeMatcher<JSONObject> {
+
     private final JSONObject expected;
 
     private JSONObjectMatcher(JSONObject expected) {
       this.expected = expected;
     }
 
-    @Override public boolean matchesSafely(JSONObject jsonObject) {
+    @Override
+    public boolean matchesSafely(JSONObject jsonObject) {
       // todo: this relies on having the same order
       return expected.toString().equals(jsonObject.toString());
     }
 
-    @Override public void describeTo(Description description) {
+    @Override
+    public void describeTo(Description description) {
       description.appendText(expected.toString());
     }
   }
@@ -299,18 +347,21 @@ public class AmplitudeTest {
   }
 
   private static class RevenueMatcher extends TypeSafeMatcher<Revenue> {
+
     private final Revenue expected;
 
     private RevenueMatcher(Revenue expected) {
       this.expected = expected;
     }
 
-    @Override public boolean matchesSafely(Revenue revenue) {
+    @Override
+    public boolean matchesSafely(Revenue revenue) {
       // Revenue class has a custom equals method
       return expected.equals(revenue);
     }
 
-    @Override public void describeTo(Description description) {
+    @Override
+    public void describeTo(Description description) {
       description.appendText(expected.toString());
     }
   }
