@@ -45,9 +45,12 @@ import org.robolectric.annotation.Config;
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
 public class AmplitudeTest {
 
-  @Mock Application application;
-  @Mock AmplitudeClient amplitude;
-  @Mock Analytics analytics;
+  @Mock
+  Application application;
+  @Mock
+  AmplitudeClient amplitude;
+  @Mock
+  Analytics analytics;
   private AmplitudeIntegration integration;
   private AmplitudeIntegration.Provider mockProvider = new AmplitudeIntegration.Provider() {
     @Override
@@ -219,6 +222,28 @@ public class AmplitudeTest {
 
     verify(amplitude).setUserId("foo");
     verify(amplitude).setUserProperties(jsonEq(traits.toJsonObject()));
+
+    verifyNoMoreInteractions(amplitude);
+  }
+
+  @Test
+  public void identifyWithGroups() {
+    Traits traits = createTraits("foo").putAge(20).putFirstName("bar");
+    IdentifyPayload payload = new IdentifyPayloadBuilder()
+        .traits(traits)
+        .options(new Options()
+            .setIntegrationOptions("Amplitude", new ValueMap()
+                .putValue("groups", new ValueMap().putValue("foo", "bar"))
+            )
+        )
+        .build();
+
+    integration.identify(payload);
+
+    verify(amplitude).setUserId("foo");
+    verify(amplitude).setUserProperties(jsonEq(traits.toJsonObject()));
+
+    verify(amplitude).setGroup("foo", "bar");
   }
 
   @Test

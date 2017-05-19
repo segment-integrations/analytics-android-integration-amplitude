@@ -8,13 +8,14 @@ import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
-import com.segment.analytics.integrations.BasePayload;
 import com.segment.analytics.integrations.GroupPayload;
 import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
+import java.util.Collections;
+import java.util.Map;
 import org.json.JSONObject;
 
 /**
@@ -101,6 +102,10 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     JSONObject traits = identify.traits().toJsonObject();
     amplitude.setUserProperties(traits);
     logger.verbose("AmplitudeClient.getInstance().setUserProperties(%s);", traits);
+
+    for (Map.Entry<String, String> entry : groups(identify).entrySet()) {
+      setGroup(entry.getKey(), entry.getValue());
+    }
   }
 
   @Override
@@ -124,7 +129,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     event(track.event(), track.properties(), groups);
   }
 
-  private JSONObject groups(BasePayload payload) {
+  private JSONObject groups(TrackPayload payload) {
     ValueMap integrations = payload.integrations();
     if (isNullOrEmpty(integrations)) {
       return null;
@@ -136,6 +141,20 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     }
 
     return amplitudeSettings.getValueMap("groups").toJsonObject();
+  }
+
+  private Map<String, String> groups(IdentifyPayload payload) {
+    ValueMap integrations = payload.integrations();
+    if (isNullOrEmpty(integrations)) {
+      return Collections.emptyMap();
+    }
+
+    ValueMap amplitudeSettings = integrations.getValueMap(AMPLITUDE_KEY);
+    if (isNullOrEmpty(amplitudeSettings)) {
+      return Collections.emptyMap();
+    }
+
+    return amplitudeSettings.getValueMap("groups").toStringMap();
   }
 
   private void event(String name, Properties properties, JSONObject groups) {
@@ -208,6 +227,10 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
 
     String groupId = group.groupId();
 
+    setGroup(groupName, groupId);
+  }
+
+  private void setGroup(String groupName, String groupId) {
     amplitude.setGroup(groupName, groupId);
     logger.verbose("AmplitudeClient.getInstance().setGroup(%s, %s);", groupName, groupId);
   }
