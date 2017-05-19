@@ -32,6 +32,7 @@ import static com.segment.analytics.Utils.createTraits;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -102,7 +103,7 @@ public class AmplitudeTest {
 
     integration.track(new TrackPayloadBuilder().event("foo").properties(properties).build());
 
-    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()));
+    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
     verifyNoMoreInteractions(amplitude);
   }
 
@@ -116,7 +117,7 @@ public class AmplitudeTest {
             new TrackPayloadBuilder().event("foo").properties(properties).build();
 
     integration.track(trackPayload);
-    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()));
+    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
     verify(amplitude).logRevenue("bar", 10, 20, "baz", "qux");
   }
 
@@ -132,7 +133,7 @@ public class AmplitudeTest {
         new TrackPayloadBuilder().event("foo").properties(properties).build();
 
     integration.track(trackPayload);
-    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()));
+    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
 
     Revenue expectedRevenue = new Revenue().setProductId("bar")
         .setPrice(20)
@@ -151,7 +152,7 @@ public class AmplitudeTest {
     trackPayload = new TrackPayloadBuilder().event("foo").properties(properties).build();
 
     integration.track(trackPayload);
-    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()));
+    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
 
     expectedRevenue = new Revenue().setProductId("bar")
             .setPrice(2)
@@ -168,7 +169,7 @@ public class AmplitudeTest {
             .putValue("receiptSignature", "qux");
     trackPayload = new TrackPayloadBuilder().event("foo").properties(properties).build();
     integration.track(trackPayload);
-    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()));
+    verify(amplitude).logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
 
     verifyNoMoreInteractions(amplitude);
   }
@@ -269,7 +270,7 @@ public class AmplitudeTest {
   }
 
   private void verifyAmplitudeLoggedEvent(String event, JSONObject jsonObject) {
-    verify(amplitude).logEvent(eq(event), jsonEq(jsonObject));
+    verify(amplitude).logEvent(eq(event), jsonEq(jsonObject), isNull(JSONObject.class));
   }
 
   public static JSONObject jsonEq(JSONObject expected) {

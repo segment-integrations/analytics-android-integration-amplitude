@@ -8,6 +8,7 @@ import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
+import com.segment.analytics.integrations.BasePayload;
 import com.segment.analytics.integrations.GroupPayload;
 import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Integration;
@@ -25,6 +26,7 @@ import org.json.JSONObject;
  * @see <a href="https://github.com/amplitude/Amplitude-Android">Amplitude Android SDK</a>
  */
 public class AmplitudeIntegration extends Integration<AmplitudeClient> {
+
   public static final Factory FACTORY =
       new Factory() {
         @Override
@@ -105,11 +107,11 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   public void screen(ScreenPayload screen) {
     super.screen(screen);
     if (trackAllPages) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.event()), screen.properties());
+      event(String.format(VIEWED_EVENT_FORMAT, screen.event()), screen.properties(), null);
     } else if (trackCategorizedPages && !isNullOrEmpty(screen.category())) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.category()), screen.properties());
+      event(String.format(VIEWED_EVENT_FORMAT, screen.category()), screen.properties(), null);
     } else if (trackNamedPages && !isNullOrEmpty(screen.name())) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.name()), screen.properties());
+      event(String.format(VIEWED_EVENT_FORMAT, screen.name()), screen.properties(), null);
     }
   }
 
@@ -117,22 +119,32 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   public void track(TrackPayload track) {
     super.track(track);
 
-    ValueMap amplitudeOptions = new ValueMap();
+    JSONObject groups = groups(track);
 
-    ValueMap integrations = track.integrations();
-    if (isNullOrEmpty(integrations)) {
-      integrations = new ValueMap();
-    }
-
-    event(track.event(), track.properties());
+    event(track.event(), track.properties(), groups);
   }
 
-  private void event(String name, Properties properties) {
-    JSONObject propertiesJSON = properties.toJsonObject();
-    amplitude.logEvent(name, propertiesJSON);
-    logger.verbose("AmplitudeClient.getInstance().logEvent(%s, %s);", name, propertiesJSON);
+  private JSONObject groups(BasePayload payload) {
+    ValueMap integrations = payload.integrations();
+    if (isNullOrEmpty(integrations)) {
+      return null;
+    }
 
-    // use containsKey since revenue can have negative values
+    ValueMap amplitudeSettings = integrations.getValueMap(AMPLITUDE_KEY);
+    if (isNullOrEmpty(amplitudeSettings)) {
+      return null;
+    }
+
+    return amplitudeSettings.getValueMap("groups").toJsonObject();
+  }
+
+  private void event(String name, Properties properties, JSONObject groups) {
+    JSONObject propertiesJSON = properties.toJsonObject();
+    amplitude.logEvent(name, propertiesJSON, groups);
+    logger.verbose(
+        "AmplitudeClient.getInstance().logEvent(%s, %s, %s);", name, propertiesJSON, groups);
+
+    // use containsKey since revenue can have negative values.
     if (properties.containsKey("revenue")) {
       if (useLogRevenueV2) {
         trackWithLogRevenueV2(properties, propertiesJSON);
