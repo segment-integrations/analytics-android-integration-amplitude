@@ -64,6 +64,10 @@ public class AmplitudeTest {
     Mockito.reset(amplitude);
   }
 
+  @Test public void factory() {
+    assertThat(AmplitudeIntegration.FACTORY.key()).isEqualTo("Amplitude");
+  }
+
   @Test public void initialize() {
     integration = new AmplitudeIntegration(mockProvider, analytics,
         new ValueMap().putValue("apiKey", "foo")

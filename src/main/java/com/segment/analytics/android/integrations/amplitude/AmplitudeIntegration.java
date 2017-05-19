@@ -25,7 +25,6 @@ import org.json.JSONObject;
  * @see <a href="https://github.com/amplitude/Amplitude-Android">Amplitude Android SDK</a>
  */
 public class AmplitudeIntegration extends Integration<AmplitudeClient> {
-
   public static final Factory FACTORY =
       new Factory() {
         @Override
@@ -41,8 +40,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   private static final String AMPLITUDE_KEY = "Amplitude";
   private static final String VIEWED_EVENT_FORMAT = "Viewed %s Screen";
 
-  final AmplitudeClient amplitude;
-  final Logger logger;
+  private final AmplitudeClient amplitude;
+  private final Logger logger;
   // mutable for testing.
   boolean trackAllPages;
   boolean trackCategorizedPages;
@@ -118,6 +117,13 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   public void track(TrackPayload track) {
     super.track(track);
 
+    ValueMap amplitudeOptions = new ValueMap();
+
+    ValueMap integrations = track.integrations();
+    if (isNullOrEmpty(integrations)) {
+      integrations = new ValueMap();
+    }
+
     event(track.event(), track.properties());
   }
 
@@ -136,6 +142,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     }
   }
 
+  @SuppressWarnings("deprecation")
   private void logRevenueV1(Properties properties) {
     double revenue = properties.getDouble("revenue", -1);
     String productId = properties.getString("productId");
