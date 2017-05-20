@@ -28,8 +28,7 @@ android {
     }
 
     lintOptions {
-        // Okio https://cloudup.com/cp7bi10o2C3g
-        disable 'InvalidPackage'
+        abortOnError false
     }
 }
 
