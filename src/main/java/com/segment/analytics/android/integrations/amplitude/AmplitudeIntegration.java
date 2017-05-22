@@ -1,9 +1,12 @@
 package com.segment.analytics.android.integrations.amplitude;
 
+import static com.segment.analytics.internal.Utils.isNullOrEmpty;
+
 import com.amplitude.api.AmplitudeClient;
 import com.amplitude.api.Revenue;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
+import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.GroupPayload;
 import com.segment.analytics.integrations.IdentifyPayload;
@@ -11,10 +14,9 @@ import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
-
+import java.util.Collections;
+import java.util.Map;
 import org.json.JSONObject;
-
-import static com.segment.analytics.internal.Utils.isNullOrEmpty;
 
 /**
  * Amplitude is an event tracking and segmentation tool for your mobile apps. By analyzing the
@@ -25,21 +27,24 @@ import static com.segment.analytics.internal.Utils.isNullOrEmpty;
  * @see <a href="https://github.com/amplitude/Amplitude-Android">Amplitude Android SDK</a>
  */
 public class AmplitudeIntegration extends Integration<AmplitudeClient> {
-  public static final Factory FACTORY = new Factory() {
-    @Override public Integration<?> create(ValueMap settings, Analytics analytics) {
-      return new AmplitudeIntegration(Provider.REAL, analytics, settings);
-    }
 
-    @Override public String key() {
-      return AMPLITUDE_KEY;
-    }
-  };
+  public static final Factory FACTORY =
+      new Factory() {
+        @Override
+        public Integration<?> create(ValueMap settings, Analytics analytics) {
+          return new AmplitudeIntegration(Provider.REAL, analytics, settings);
+        }
+
+        @Override
+        public String key() {
+          return AMPLITUDE_KEY;
+        }
+      };
   private static final String AMPLITUDE_KEY = "Amplitude";
   private static final String VIEWED_EVENT_FORMAT = "Viewed %s Screen";
 
-
-  final AmplitudeClient amplitude;
-  final Logger logger;
+  private final AmplitudeClient amplitude;
+  private final Logger logger;
   // mutable for testing.
   boolean trackAllPages;
   boolean trackCategorizedPages;
@@ -49,13 +54,16 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   // Using PowerMockito fails with https://cloudup.com/c5JPuvmTCaH. So we introduce a provider
   // abstraction to mock what AmplitudeClient.getInstance() returns.
   interface Provider {
+
     AmplitudeClient get();
 
-    Provider REAL = new Provider() {
-      @Override public AmplitudeClient get() {
-        return AmplitudeClient.getInstance();
-      }
-    };
+    Provider REAL =
+        new Provider() {
+          @Override
+          public AmplitudeClient get() {
+            return AmplitudeClient.getInstance();
+          }
+        };
   }
 
   AmplitudeIntegration(Provider provider, Analytics analytics, ValueMap settings) {
@@ -78,11 +86,13 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     logger.verbose("AmplitudeClient.getInstance().trackSessionEvents(%s);", trackSessionEvents);
   }
 
-  @Override public AmplitudeClient getUnderlyingInstance() {
+  @Override
+  public AmplitudeClient getUnderlyingInstance() {
     return amplitude;
   }
 
-  @Override public void identify(IdentifyPayload identify) {
+  @Override
+  public void identify(IdentifyPayload identify) {
     super.identify(identify);
 
     String userId = identify.userId();
@@ -92,85 +102,149 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     JSONObject traits = identify.traits().toJsonObject();
     amplitude.setUserProperties(traits);
     logger.verbose("AmplitudeClient.getInstance().setUserProperties(%s);", traits);
-  }
 
-  @Override public void screen(ScreenPayload screen) {
-    super.screen(screen);
-    if (trackAllPages) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.event()), screen.properties());
-    } else if (trackCategorizedPages && !isNullOrEmpty(screen.category())) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.category()), screen.properties());
-    } else if (trackNamedPages && !isNullOrEmpty(screen.name())) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.name()), screen.properties());
+    for (Map.Entry<String, String> entry : groups(identify).entrySet()) {
+      setGroup(entry.getKey(), entry.getValue());
     }
   }
 
-  @Override public void track(TrackPayload track) {
-    super.track(track);
-    event(track.event(), track.properties());
+  @Override
+  public void screen(ScreenPayload screen) {
+    super.screen(screen);
+    if (trackAllPages) {
+      event(String.format(VIEWED_EVENT_FORMAT, screen.event()), screen.properties(), null);
+    } else if (trackCategorizedPages && !isNullOrEmpty(screen.category())) {
+      event(String.format(VIEWED_EVENT_FORMAT, screen.category()), screen.properties(), null);
+    } else if (trackNamedPages && !isNullOrEmpty(screen.name())) {
+      event(String.format(VIEWED_EVENT_FORMAT, screen.name()), screen.properties(), null);
+    }
   }
 
-  private void event(String name, Properties properties) {
-    JSONObject propertiesJSON = properties.toJsonObject();
-    amplitude.logEvent(name, propertiesJSON);
-    logger.verbose("AmplitudeClient.getInstance().logEvent(%s, %s);", name, propertiesJSON);
+  @Override
+  public void track(TrackPayload track) {
+    super.track(track);
 
-    // use containsKey since revenue can have negative values
+    JSONObject groups = groups(track);
+
+    event(track.event(), track.properties(), groups);
+  }
+
+  private JSONObject groups(TrackPayload payload) {
+    ValueMap integrations = payload.integrations();
+    if (isNullOrEmpty(integrations)) {
+      return null;
+    }
+
+    ValueMap amplitudeSettings = integrations.getValueMap(AMPLITUDE_KEY);
+    if (isNullOrEmpty(amplitudeSettings)) {
+      return null;
+    }
+
+    return amplitudeSettings.getValueMap("groups").toJsonObject();
+  }
+
+  private Map<String, String> groups(IdentifyPayload payload) {
+    ValueMap integrations = payload.integrations();
+    if (isNullOrEmpty(integrations)) {
+      return Collections.emptyMap();
+    }
+
+    ValueMap amplitudeSettings = integrations.getValueMap(AMPLITUDE_KEY);
+    if (isNullOrEmpty(amplitudeSettings)) {
+      return Collections.emptyMap();
+    }
+
+    return amplitudeSettings.getValueMap("groups").toStringMap();
+  }
+
+  private void event(String name, Properties properties, JSONObject groups) {
+    JSONObject propertiesJSON = properties.toJsonObject();
+    amplitude.logEvent(name, propertiesJSON, groups);
+    logger.verbose(
+        "AmplitudeClient.getInstance().logEvent(%s, %s, %s);", name, propertiesJSON, groups);
+
+    // use containsKey since revenue can have negative values.
     if (properties.containsKey("revenue")) {
       if (useLogRevenueV2) {
-        double price = properties.getDouble("price", -1);
-        int quantity = properties.getInt("quantity", 1);
-
-        // if no price, fallback to using revenue
-        if (!properties.containsKey("price")) {
-          price = properties.getDouble("revenue", -1);
-          quantity = 1;
-        }
-
-        Revenue ampRevenue = new Revenue().setPrice(price).setQuantity(quantity);
-        if (properties.containsKey("productId")) {
-          ampRevenue.setProductId(properties.getString("productId"));
-        }
-        if (properties.containsKey("revenueType")) {
-          ampRevenue.setRevenueType(properties.getString("revenueType"));
-        }
-        if (properties.containsKey("receipt") && properties.containsKey("receiptSignature")) {
-          ampRevenue.setReceipt(
-                  properties.getString("receipt"),
-                  properties.getString("receiptSignature")
-          );
-        }
-        ampRevenue.setEventProperties(propertiesJSON);
-        amplitude.logRevenueV2(ampRevenue);
-        logger.verbose("AmplitudeClient.getInstance().logRevenueV2(%s, %s);", price, quantity);
+        trackWithLogRevenueV2(properties, propertiesJSON);
       } else {
-        // fallback to using logRevenue v1
-        double revenue = properties.getDouble("revenue", -1);
-        String productId = properties.getString("productId");
-        int quantity = properties.getInt("quantity", 0);
-        String receipt = properties.getString("receipt");
-        String receiptSignature = properties.getString("receiptSignature");
-        amplitude.logRevenue(productId, quantity, revenue, receipt, receiptSignature);
-        logger.verbose("AmplitudeClient.getInstance().logRevenue(%s, %s, %s, %s, %s);", productId,
-                quantity, revenue, receipt, receiptSignature);
+        logRevenueV1(properties);
       }
     }
   }
 
-  @Override public void group(GroupPayload group) {
-    String groupId = group.groupId();
-    amplitude.setGroup("[Segment] Group", groupId);
-    logger.verbose("AmplitudeClient.getInstance().setGroup([Segment] Group, %s);", groupId);
+  @SuppressWarnings("deprecation")
+  private void logRevenueV1(Properties properties) {
+    double revenue = properties.getDouble("revenue", -1);
+    String productId = properties.getString("productId");
+    int quantity = properties.getInt("quantity", 0);
+    String receipt = properties.getString("receipt");
+    String receiptSignature = properties.getString("receiptSignature");
+    amplitude.logRevenue(productId, quantity, revenue, receipt, receiptSignature);
+    logger.verbose(
+        "AmplitudeClient.getInstance().logRevenue(%s, %s, %s, %s, %s);",
+        productId, quantity, revenue, receipt, receiptSignature);
   }
 
-  @Override public void flush() {
+  private void trackWithLogRevenueV2(Properties properties, JSONObject propertiesJSON) {
+    double price = properties.getDouble("price", -1);
+    int quantity = properties.getInt("quantity", 1);
+
+    // if no price, fallback to using revenue
+    if (!properties.containsKey("price")) {
+      price = properties.getDouble("revenue", -1);
+      quantity = 1;
+    }
+
+    Revenue ampRevenue = new Revenue().setPrice(price).setQuantity(quantity);
+    if (properties.containsKey("productId")) {
+      ampRevenue.setProductId(properties.getString("productId"));
+    }
+    if (properties.containsKey("revenueType")) {
+      ampRevenue.setRevenueType(properties.getString("revenueType"));
+    }
+    if (properties.containsKey("receipt") && properties.containsKey("receiptSignature")) {
+      ampRevenue.setReceipt(
+          properties.getString("receipt"), properties.getString("receiptSignature"));
+    }
+    ampRevenue.setEventProperties(propertiesJSON);
+    amplitude.logRevenueV2(ampRevenue);
+    logger.verbose("AmplitudeClient.getInstance().logRevenueV2(%s, %s);", price, quantity);
+  }
+
+  @Override
+  public void group(GroupPayload group) {
+    String groupName = null;
+
+    Traits traits = group.traits();
+    if (!isNullOrEmpty(traits)) {
+      groupName = traits.name();
+    }
+
+    if (isNullOrEmpty(groupName)) {
+      groupName = "[Segment] Group";
+    }
+
+    String groupId = group.groupId();
+
+    setGroup(groupName, groupId);
+  }
+
+  private void setGroup(String groupName, String groupId) {
+    amplitude.setGroup(groupName, groupId);
+    logger.verbose("AmplitudeClient.getInstance().setGroup(%s, %s);", groupName, groupId);
+  }
+
+  @Override
+  public void flush() {
     super.flush();
 
     amplitude.uploadEvents();
     logger.verbose("AmplitudeClient.getInstance().uploadEvents();");
   }
 
-  @Override public void reset() {
+  @Override
+  public void reset() {
     super.reset();
 
     amplitude.regenerateDeviceId();
