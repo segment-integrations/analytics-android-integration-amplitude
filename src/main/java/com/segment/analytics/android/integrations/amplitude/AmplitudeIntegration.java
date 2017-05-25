@@ -2,20 +2,23 @@ package com.segment.analytics.android.integrations.amplitude;
 
 import static com.segment.analytics.internal.Utils.isNullOrEmpty;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import com.amplitude.api.AmplitudeClient;
 import com.amplitude.api.Revenue;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
+import com.segment.analytics.integrations.BasePayload;
 import com.segment.analytics.integrations.GroupPayload;
 import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
-import java.util.Collections;
-import java.util.Map;
+import java.util.Iterator;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -103,8 +106,19 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     amplitude.setUserProperties(traits);
     logger.verbose("AmplitudeClient.getInstance().setUserProperties(%s);", traits);
 
-    for (Map.Entry<String, String> entry : groups(identify).entrySet()) {
-      setGroup(entry.getKey(), entry.getValue());
+    JSONObject groups = groups(identify);
+    if (groups == null) {
+      return;
+    }
+    Iterator<String> it = groups.keys();
+    while (it.hasNext()) {
+      String key = it.next();
+      try {
+        Object value = groups.get(key);
+        setGroup(key, value);
+      } catch (JSONException e) {
+        logger.error(e, "error reading %s from %s", key, groups);
+      }
     }
   }
 
@@ -129,35 +143,27 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     event(track.event(), track.properties(), groups);
   }
 
-  private JSONObject groups(TrackPayload payload) {
+  static @Nullable JSONObject groups(BasePayload payload) {
     ValueMap integrations = payload.integrations();
     if (isNullOrEmpty(integrations)) {
       return null;
     }
 
-    ValueMap amplitudeSettings = integrations.getValueMap(AMPLITUDE_KEY);
-    if (isNullOrEmpty(amplitudeSettings)) {
+    ValueMap amplitudeOptions = integrations.getValueMap(AMPLITUDE_KEY);
+    if (isNullOrEmpty(amplitudeOptions)) {
       return null;
     }
 
-    return amplitudeSettings.getValueMap("groups").toJsonObject();
-  }
-
-  private Map<String, String> groups(IdentifyPayload payload) {
-    ValueMap integrations = payload.integrations();
-    if (isNullOrEmpty(integrations)) {
-      return Collections.emptyMap();
+    ValueMap groups = amplitudeOptions.getValueMap("groups");
+    if (isNullOrEmpty(groups)) {
+      return null;
     }
 
-    ValueMap amplitudeSettings = integrations.getValueMap(AMPLITUDE_KEY);
-    if (isNullOrEmpty(amplitudeSettings)) {
-      return Collections.emptyMap();
-    }
-
-    return amplitudeSettings.getValueMap("groups").toStringMap();
+    return groups.toJsonObject();
   }
 
-  private void event(String name, Properties properties, JSONObject groups) {
+  private void event(
+      @NonNull String name, @NonNull Properties properties, @Nullable JSONObject groups) {
     JSONObject propertiesJSON = properties.toJsonObject();
     amplitude.logEvent(name, propertiesJSON, groups);
     logger.verbose(
@@ -227,10 +233,11 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
 
     String groupId = group.groupId();
 
+    assert groupName != null;
     setGroup(groupName, groupId);
   }
 
-  private void setGroup(String groupName, String groupId) {
+  private void setGroup(@NonNull String groupName, @NonNull Object groupId) {
     amplitude.setGroup(groupName, groupId);
     logger.verbose("AmplitudeClient.getInstance().setGroup(%s, %s);", groupName, groupId);
   }

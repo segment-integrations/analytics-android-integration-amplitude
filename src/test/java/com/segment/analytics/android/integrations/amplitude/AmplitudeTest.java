@@ -15,6 +15,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import android.app.Application;
 import com.amplitude.api.AmplitudeClient;
 import com.amplitude.api.Revenue;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.Options;
 import com.segment.analytics.Properties;
@@ -31,6 +33,7 @@ import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -45,12 +48,9 @@ import org.robolectric.annotation.Config;
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
 public class AmplitudeTest {
 
-  @Mock
-  Application application;
-  @Mock
-  AmplitudeClient amplitude;
-  @Mock
-  Analytics analytics;
+  @Mock Application application;
+  @Mock AmplitudeClient amplitude;
+  @Mock Analytics analytics;
   private AmplitudeIntegration integration;
   private AmplitudeIntegration.Provider mockProvider = new AmplitudeIntegration.Provider() {
     @Override
@@ -135,6 +135,28 @@ public class AmplitudeTest {
 
     JSONObject groups = new JSONObject();
     groups.put("foo", "bar");
+    verify(amplitude)
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), jsonEq(groups));
+    verifyNoMoreInteractions(amplitude);
+  }
+
+  @Test
+  public void trackWithListGroups() throws JSONException {
+    Properties properties = new Properties();
+
+    integration.track(new TrackPayloadBuilder()
+        .event("foo")
+        .properties(properties)
+        .options(new Options()
+            .setIntegrationOptions("Amplitude", new ValueMap()
+                .putValue("groups", new ValueMap()
+                    .putValue("sports", ImmutableList.of("basketball", "tennis")))
+            )
+        )
+        .build());
+
+    JSONObject groups = new JSONObject();
+    groups.put("sports", new JSONArray().put("basketball").put("tennis"));
     verify(amplitude)
         .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), jsonEq(groups));
     verifyNoMoreInteractions(amplitude);
@@ -247,6 +269,27 @@ public class AmplitudeTest {
   }
 
   @Test
+  public void identifyWithListGroups() {
+    Traits traits = createTraits("foo").putAge(20).putFirstName("bar");
+    IdentifyPayload payload = new IdentifyPayloadBuilder()
+        .traits(traits)
+        .options(new Options()
+            .setIntegrationOptions("Amplitude", new ValueMap()
+                .putValue("groups",
+                    ImmutableMap.of("sports", ImmutableList.of("basketball", "tennis")))
+            )
+        )
+        .build();
+
+    integration.identify(payload);
+
+    verify(amplitude).setUserId("foo");
+    verify(amplitude).setUserProperties(jsonEq(traits.toJsonObject()));
+
+    verify(amplitude).setGroup("sports", new JSONArray().put("basketball").put("tennis"));
+  }
+
+  @Test
   public void screen() {
     integration.trackAllPages = false;
     integration.trackCategorizedPages = false;
@@ -337,6 +380,60 @@ public class AmplitudeTest {
 
     // Previously we called clearUserProperties() which was incorrect.
     verify(amplitude, never()).clearUserProperties();
+  }
+
+  @Test
+  public void groups() throws JSONException {
+    assertThat(AmplitudeIntegration.groups(new TrackPayloadBuilder()
+        .event("foo")
+        .build()))
+        .isNull();
+    assertThat(AmplitudeIntegration.groups(new TrackPayloadBuilder()
+        .event("foo")
+        .options(new Options())
+        .build()))
+        .isNull();
+    assertThat(AmplitudeIntegration.groups(new TrackPayloadBuilder()
+        .event("foo")
+        .options(new Options()
+            .setIntegrationOptions("Mixpanel", new ValueMap().putValue("groups", "foo")))
+        .build()))
+        .isNull();
+    assertThat(AmplitudeIntegration.groups(new TrackPayloadBuilder()
+        .event("foo")
+        .options(new Options().setIntegration("Amplitude", true))
+        .build()))
+        .isNull();
+    assertThat(AmplitudeIntegration.groups(new TrackPayloadBuilder()
+        .event("foo")
+        .options(new Options().setIntegrationOptions("Amplitude", new ValueMap()))
+        .build()))
+        .isNull();
+    assertThat(AmplitudeIntegration.groups(new TrackPayloadBuilder()
+        .event("foo")
+        .options(new Options()
+            .setIntegrationOptions("Amplitude", new ValueMap().putValue("foo", "bar")))
+        .build()))
+        .isNull();
+
+    assertThat(AmplitudeIntegration.groups(new TrackPayloadBuilder()
+        .event("foo")
+        .options(new Options().setIntegrationOptions("Amplitude",
+            new ValueMap().putValue("groups", new ValueMap().putValue("foo", "bar")))
+        )
+        .build()))
+        .isEqualToComparingFieldByField(new JSONObject().put("foo", "bar"));
+
+    assertThat(AmplitudeIntegration.groups(new TrackPayloadBuilder()
+        .event("foo")
+        .options(new Options().setIntegrationOptions("Amplitude",
+            new ValueMap().putValue("groups",
+                new ValueMap().putValue("sports", ImmutableList.of("basketball", "tennis")))
+            )
+        )
+        .build()))
+        .isEqualToComparingFieldByField(new JSONObject()
+            .put("sports", new JSONArray().put("basketball").put("tennis")));
   }
 
   private void verifyAmplitudeLoggedEvent(String event, JSONObject jsonObject) {
