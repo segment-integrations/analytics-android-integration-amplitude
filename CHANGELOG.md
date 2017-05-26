@@ -1,4 +1,10 @@
 
+Version 1.2.1 (May 25, 2017)
+==============================
+*(Supports analytics-android 4.0.+ and Amplitude 2.13.4+)*
+
+  * Fix: Support lists for Amplitude groups.
+
 Version 1.2.0 (May 22, 2017)
 ==============================
 *(Supports analytics-android 4.0.+ and Amplitude 2.13.4+)*
