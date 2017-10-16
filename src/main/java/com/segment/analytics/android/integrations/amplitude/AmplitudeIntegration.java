@@ -169,8 +169,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     logger.verbose(
         "AmplitudeClient.getInstance().logEvent(%s, %s, %s);", name, propertiesJSON, groups);
 
-    // use containsKey since revenue can have negative values.
-    if (properties.containsKey("revenue")) {
+    // use containsKey since revenue and total can have negative values.
+    if (properties.containsKey("revenue") || properties.containsKey("total")) {
       if (useLogRevenueV2) {
         trackWithLogRevenueV2(properties, propertiesJSON);
       } else {
@@ -181,7 +181,10 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
 
   @SuppressWarnings("deprecation")
   private void logRevenueV1(Properties properties) {
-    double revenue = properties.getDouble("revenue", -1);
+    double revenue = properties.getDouble("revenue", 0);
+    if (revenue == 0) {
+      revenue = properties.getDouble("total", 0);
+    }
     String productId = properties.getString("productId");
     int quantity = properties.getInt("quantity", 0);
     String receipt = properties.getString("receipt");
@@ -193,12 +196,16 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   }
 
   private void trackWithLogRevenueV2(Properties properties, JSONObject propertiesJSON) {
-    double price = properties.getDouble("price", -1);
+    double price = properties.getDouble("price", 0);
     int quantity = properties.getInt("quantity", 1);
 
-    // if no price, fallback to using revenue
+    // if no price, fallback to using revenue, then total
     if (!properties.containsKey("price")) {
-      price = properties.getDouble("revenue", -1);
+      price = properties.getDouble("revenue", 0);
+      if (price == 0) {
+        price = properties.getDouble("total", 0);
+      }
+      // overrides quantity to 1; Amplitude will internally calculate revenue as price * quantity
       quantity = 1;
     }
 
