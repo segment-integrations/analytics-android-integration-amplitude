@@ -4,6 +4,7 @@ import static com.segment.analytics.internal.Utils.isNullOrEmpty;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import com.amplitude.api.Amplitude;
 import com.amplitude.api.AmplitudeClient;
 import com.amplitude.api.Revenue;
 import com.segment.analytics.Analytics;
@@ -64,7 +65,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
         new Provider() {
           @Override
           public AmplitudeClient get() {
-            return AmplitudeClient.getInstance();
+            return Amplitude.getInstance();
           }
         };
   }
