@@ -1,4 +1,11 @@
 
+Version 1.3.0 (October 16, 2017)
+==============================
+*(Supports analytics-android 4.2.4+ and Amplitude 2.15.+)*
+
+  * New: Falls back on `total` when `revenue` is not present
+  * Updating Amplitude dependency to 2.15.0.
+
 Version 1.2.1 (May 25, 2017)
 ==============================
 *(Supports analytics-android 4.0.+ and Amplitude 2.13.4+)*
