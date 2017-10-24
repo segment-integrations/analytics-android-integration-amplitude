@@ -54,6 +54,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   boolean trackCategorizedPages;
   boolean trackNamedPages;
   boolean useLogRevenueV2;
+  String groupTypeTrait;
+  String groupValueTrait;
 
   // Using PowerMockito fails with https://cloudup.com/c5JPuvmTCaH. So we introduce a provider
   // abstraction to mock what AmplitudeClient.getInstance() returns.
@@ -76,6 +78,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     trackCategorizedPages = settings.getBoolean("trackCategorizedPages", false);
     trackNamedPages = settings.getBoolean("trackNamedPages", false);
     useLogRevenueV2 = settings.getBoolean("useLogRevenueV2", false);
+    groupTypeTrait = settings.getString("groupTypeTrait");
+    groupValueTrait = settings.getString("groupTypeValue");
     logger = analytics.logger(AMPLITUDE_KEY);
 
     String apiKey = settings.getString("apiKey");
@@ -229,25 +233,29 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   @Override
   public void group(GroupPayload group) {
     String groupName = null;
+    String groupValue = group.groupId();
 
     Traits traits = group.traits();
     if (!isNullOrEmpty(traits)) {
-      groupName = traits.name();
+      if (traits.containsKey(groupTypeTrait) && traits.containsKey(groupValueTrait)) {
+        groupName = traits.getString(groupTypeTrait);
+        groupValue = traits.getString(groupValueTrait);
+      } else {
+        groupName = traits.name();
+      }
     }
 
     if (isNullOrEmpty(groupName)) {
       groupName = "[Segment] Group";
     }
 
-    String groupId = group.groupId();
-
     assert groupName != null;
-    setGroup(groupName, groupId);
+    setGroup(groupName, groupValue);
   }
 
-  private void setGroup(@NonNull String groupName, @NonNull Object groupId) {
-    amplitude.setGroup(groupName, groupId);
-    logger.verbose("AmplitudeClient.getInstance().setGroup(%s, %s);", groupName, groupId);
+  private void setGroup(@NonNull String groupName, @NonNull Object groupValue) {
+    amplitude.setGroup(groupName, groupValue);
+    logger.verbose("AmplitudeClient.getInstance().setGroup(%s, %s);", groupName, groupValue);
   }
 
   @Override

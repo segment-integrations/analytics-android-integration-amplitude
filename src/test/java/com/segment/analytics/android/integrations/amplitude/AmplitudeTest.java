@@ -456,6 +456,21 @@ public class AmplitudeTest {
   }
 
   @Test
+  public void groupWithGroupNameSettings() {
+    integration.groupTypeTrait = "company";
+    integration.groupValueTrait = "companyType";
+
+    GroupPayload payload = new GroupPayloadBuilder()
+            .groupId("testGroupId")
+            .groupTraits(new Traits().putValue("company", "Segment").putValue("companyType", "data"))
+            .build();
+
+    integration.group(payload);
+
+    verify(amplitude).setGroup("Segment", "data");
+  }
+
+  @Test
   public void flush() {
     integration.flush();
 
