@@ -54,6 +54,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   boolean trackCategorizedPages;
   boolean trackNamedPages;
   boolean useLogRevenueV2;
+  String groupTypeTrait;
+  String groupTypeValue;
 
   // Using PowerMockito fails with https://cloudup.com/c5JPuvmTCaH. So we introduce a provider
   // abstraction to mock what AmplitudeClient.getInstance() returns.
@@ -76,6 +78,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     trackCategorizedPages = settings.getBoolean("trackCategorizedPages", false);
     trackNamedPages = settings.getBoolean("trackNamedPages", false);
     useLogRevenueV2 = settings.getBoolean("useLogRevenueV2", false);
+    groupTypeTrait = settings.getString("groupTypeTrait");
+    groupTypeValue = settings.getString("groupTypeValue");
     logger = analytics.logger(AMPLITUDE_KEY);
 
     String apiKey = settings.getString("apiKey");
@@ -232,13 +236,15 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
 
     Traits traits = group.traits();
     if (!isNullOrEmpty(traits)) {
-      groupName = traits.name();
+      if (traits.containsKey(groupTypeTrait) && traits.containsKey(groupTypeValue)) {
+        groupName = traits.getString(groupTypeValue);
+      } else {
+        groupName = traits.name();
+        if (isNullOrEmpty(groupName)) {
+          groupName = "[Segment] Group";
+        }
+      }
     }
-
-    if (isNullOrEmpty(groupName)) {
-      groupName = "[Segment] Group";
-    }
-
     String groupId = group.groupId();
 
     assert groupName != null;
