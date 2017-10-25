@@ -481,6 +481,7 @@ public class AmplitudeTest {
   public void reset() {
     integration.reset();
 
+    verify(amplitude).setUserId(null);
     verify(amplitude).regenerateDeviceId();
 
     // Previously we called clearUserProperties() which was incorrect.
