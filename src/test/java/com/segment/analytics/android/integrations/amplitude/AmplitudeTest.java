@@ -423,13 +423,7 @@ public class AmplitudeTest {
     integration.trackNamedPages = false;
 
     integration.screen(new ScreenPayloadBuilder().category("foo").build());
-    verifyAmplitudeLoggedEvent("Viewed foo Screen", new JSONObject());
-
-    integration.screen(new ScreenPayloadBuilder().name("bar").build());
-    verifyAmplitudeLoggedEvent("Viewed bar Screen", new JSONObject());
-
-    integration.screen(new ScreenPayloadBuilder().category("bar").name("baz").build());
-    verifyAmplitudeLoggedEvent("Viewed baz Screen", new JSONObject());
+    verifyAmplitudeLoggedEvent("Viewed Screen", new JSONObject());
   }
 
   @Test
