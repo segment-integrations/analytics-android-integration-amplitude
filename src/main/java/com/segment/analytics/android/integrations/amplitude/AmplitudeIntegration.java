@@ -54,6 +54,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   boolean trackCategorizedPages;
   boolean trackNamedPages;
   boolean useLogRevenueV2;
+  boolean enableLocationListening;
+  boolean useAdvertisingIdForDeviceId;
   String groupTypeTrait;
   String groupValueTrait;
 
@@ -92,6 +94,15 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     boolean trackSessionEvents = settings.getBoolean("trackSessionEvents", false);
     amplitude.trackSessionEvents(trackSessionEvents);
     logger.verbose("AmplitudeClient.getInstance().trackSessionEvents(%s);", trackSessionEvents);
+
+    enableLocationListening = settings.getBoolean("enableLocationListening", false);
+    if (enableLocationListening) {
+      amplitude.enableLocationListening();
+    }
+    useAdvertisingIdForDeviceId = settings.getBoolean("useAdvertisingIdForDeviceId", false);
+    if (useAdvertisingIdForDeviceId) {
+      amplitude.useAdvertisingIdForDeviceId();
+    }
   }
 
   @Override
