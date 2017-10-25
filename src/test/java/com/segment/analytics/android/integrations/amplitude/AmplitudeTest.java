@@ -84,15 +84,21 @@ public class AmplitudeTest {
         new ValueMap().putValue("apiKey", "foo")
             .putValue("trackAllPages", true)
             .putValue("trackCategorizedPages", false)
-            .putValue("trackNamedPages", true));
+            .putValue("trackNamedPages", true)
+            .putValue("enableLocationListening", true)
+            .putValue("useAdvertisingIdForDeviceId", true));
 
     assertThat(integration.trackAllPages).isTrue();
     assertThat(integration.trackCategorizedPages).isFalse();
     assertThat(integration.trackNamedPages).isTrue();
+    assertThat(integration.enableLocationListening).isTrue();
+    assertThat(integration.useAdvertisingIdForDeviceId).isTrue();
 
     verify(amplitude).initialize(application, "foo");
     verify(amplitude).enableForegroundTracking(application);
     verify(amplitude).trackSessionEvents(false);
+    verify(amplitude).enableLocationListening();
+    verify(amplitude).useAdvertisingIdForDeviceId();
   }
 
   @Test
