@@ -140,7 +140,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   public void screen(ScreenPayload screen) {
     super.screen(screen);
     if (trackAllPages) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.event()), screen.properties(), null);
+      event("Viewed Screen", screen.properties(), null);
     } else if (trackCategorizedPages && !isNullOrEmpty(screen.category())) {
       event(String.format(VIEWED_EVENT_FORMAT, screen.category()), screen.properties(), null);
     } else if (trackNamedPages && !isNullOrEmpty(screen.name())) {
@@ -281,7 +281,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
 
     amplitude.setUserId(null);
     amplitude.regenerateDeviceId();
-    logger.verbose("AmplitudeClient.getInstance().setUserId(null)");
+    logger.verbose("AmplitudeClient.getInstance().setUserId(null);");
     logger.verbose("AmplitudeClient.getInstance().regenerateDeviceId();");
   }
 }
