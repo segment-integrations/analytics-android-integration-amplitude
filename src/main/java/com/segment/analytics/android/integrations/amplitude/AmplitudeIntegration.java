@@ -270,6 +270,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   public void reset() {
     super.reset();
 
+    amplitude.setUserId(null);
     amplitude.regenerateDeviceId();
     logger.verbose("AmplitudeClient.getInstance().regenerateDeviceId();");
   }
