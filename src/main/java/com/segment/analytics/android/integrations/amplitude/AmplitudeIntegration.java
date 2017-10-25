@@ -92,6 +92,11 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     boolean trackSessionEvents = settings.getBoolean("trackSessionEvents", false);
     amplitude.trackSessionEvents(trackSessionEvents);
     logger.verbose("AmplitudeClient.getInstance().trackSessionEvents(%s);", trackSessionEvents);
+
+    boolean enableLocationListening = settings.getBoolean("enableLocationListening", false);
+    if (enableLocationListening) {
+      amplitude.enableLocationListening();
+    }
   }
 
   @Override
