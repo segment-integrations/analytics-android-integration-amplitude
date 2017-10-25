@@ -84,7 +84,8 @@ public class AmplitudeTest {
         new ValueMap().putValue("apiKey", "foo")
             .putValue("trackAllPages", true)
             .putValue("trackCategorizedPages", false)
-            .putValue("trackNamedPages", true));
+            .putValue("trackNamedPages", true)
+            .putValue("enableLocationListening", true));
 
     assertThat(integration.trackAllPages).isTrue();
     assertThat(integration.trackCategorizedPages).isFalse();
@@ -93,6 +94,7 @@ public class AmplitudeTest {
     verify(amplitude).initialize(application, "foo");
     verify(amplitude).enableForegroundTracking(application);
     verify(amplitude).trackSessionEvents(false);
+    verify(amplitude).enableLocationListening();
   }
 
   @Test
