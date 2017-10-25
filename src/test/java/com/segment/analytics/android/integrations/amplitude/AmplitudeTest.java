@@ -85,7 +85,8 @@ public class AmplitudeTest {
             .putValue("trackAllPages", true)
             .putValue("trackCategorizedPages", false)
             .putValue("trackNamedPages", true)
-            .putValue("enableLocationListening", true));
+            .putValue("enableLocationListening", true)
+            .putValue("useAdvertisingIdForDeviceId", true));
 
     assertThat(integration.trackAllPages).isTrue();
     assertThat(integration.trackCategorizedPages).isFalse();
@@ -95,6 +96,7 @@ public class AmplitudeTest {
     verify(amplitude).enableForegroundTracking(application);
     verify(amplitude).trackSessionEvents(false);
     verify(amplitude).enableLocationListening();
+    verify(amplitude).useAdvertisingIdForDeviceId();
   }
 
   @Test

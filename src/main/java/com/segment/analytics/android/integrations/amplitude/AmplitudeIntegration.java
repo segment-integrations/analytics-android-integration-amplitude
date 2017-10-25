@@ -97,6 +97,10 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     if (enableLocationListening) {
       amplitude.enableLocationListening();
     }
+    boolean useAdvertisingIdForDeviceId = settings.getBoolean("useAdvertisingIdForDeviceId", false);
+    if (useAdvertisingIdForDeviceId) {
+      amplitude.useAdvertisingIdForDeviceId();
+    }
   }
 
   @Override
