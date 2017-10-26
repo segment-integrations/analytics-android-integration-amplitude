@@ -13,7 +13,9 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import android.app.Application;
+
 import com.amplitude.api.AmplitudeClient;
+import com.amplitude.api.Identify;
 import com.amplitude.api.Revenue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -45,6 +47,8 @@ import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.util.Arrays;
+
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
 public class AmplitudeTest {
@@ -68,7 +72,8 @@ public class AmplitudeTest {
     when(analytics.logger("Amplitude")).thenReturn(Logger.with(VERBOSE));
 
     integration =
-        new AmplitudeIntegration(mockProvider, analytics, new ValueMap().putValue("apiKey", "foo"));
+        new AmplitudeIntegration(mockProvider, analytics, new ValueMap()
+                .putValue("apiKey", "foo"));
 
     Mockito.reset(amplitude);
   }
@@ -381,6 +386,22 @@ public class AmplitudeTest {
     verify(amplitude).setUserProperties(jsonEq(traits.toJsonObject()));
 
     verify(amplitude).setGroup("sports", new JSONArray().put("basketball").put("tennis"));
+  }
+
+  @Test
+  public void identifyWithIncrementedTraits() {
+    ValueMap settings = new ValueMap().putValue("traitsToIncrement", Arrays.asList("numberOfVisits"));
+    integration.traitsToIncrement = integration.getStringSet(settings, "traitsToIncrement");
+    Traits traits = createTraits("foo").putValue("numberOfVisits", 100);
+    IdentifyPayload payload = new IdentifyPayloadBuilder().traits(traits).build();
+    integration.identify(payload);
+
+    Identify identify = new Identify();
+    identify.add("numberOfVisits", 100);
+
+    ArgumentCaptor<Identify> identifyObject = ArgumentCaptor.forClass(Identify.class);
+    verify(amplitude).identify(identifyObject.capture());
+    assertThat(identify.equals(identifyObject));
   }
 
   @Test
