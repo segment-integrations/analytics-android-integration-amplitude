@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.amplitude.api.Amplitude;
 import com.amplitude.api.AmplitudeClient;
+import com.amplitude.api.Identify;
 import com.amplitude.api.Revenue;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
@@ -18,7 +19,15 @@ import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -56,6 +65,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   boolean useLogRevenueV2;
   String groupTypeTrait;
   String groupValueTrait;
+  Set<String> traitsToIncrement;
 
   // Using PowerMockito fails with https://cloudup.com/c5JPuvmTCaH. So we introduce a provider
   // abstraction to mock what AmplitudeClient.getInstance() returns.
@@ -80,6 +90,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     useLogRevenueV2 = settings.getBoolean("useLogRevenueV2", false);
     groupTypeTrait = settings.getString("groupTypeTrait");
     groupValueTrait = settings.getString("groupTypeValue");
+    traitsToIncrement = getStringSet(settings, "traitsToIncrement");
     logger = analytics.logger(AMPLITUDE_KEY);
 
     String apiKey = settings.getString("apiKey");
@@ -103,6 +114,23 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     }
   }
 
+  public static Set<String> getStringSet(ValueMap valueMap, String key) {
+    try {
+      //noinspection unchecked
+      List<Object> incrementTraits = (List<Object>) valueMap.get(key);
+      if (incrementTraits == null || incrementTraits.size() == 0) {
+        return Collections.emptySet();
+      }
+      Set<String> stringSet = new HashSet<>(incrementTraits.size());
+      for (int i = 0; i < incrementTraits.size(); i++) {
+        stringSet.add((String) incrementTraits.get(i));
+      }
+      return stringSet;
+    } catch (ClassCastException e) {
+      return Collections.emptySet();
+    }
+  }
+
   @Override
   public AmplitudeClient getUnderlyingInstance() {
     return amplitude;
@@ -116,9 +144,16 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     amplitude.setUserId(userId);
     logger.verbose("AmplitudeClient.getInstance().setUserId(%s);", userId);
 
-    JSONObject traits = identify.traits().toJsonObject();
-    amplitude.setUserProperties(traits);
-    logger.verbose("AmplitudeClient.getInstance().setUserProperties(%s);", traits);
+    Traits traits = identify.traits();
+    if (!isNullOrEmpty(traitsToIncrement)) {
+      Map<String, Object> traitsMap = new HashMap<>();
+      traitsMap.putAll(traits);
+      incrementAndSetTraits(traitsMap);
+    } else {
+      JSONObject userTraits = traits.toJsonObject();
+      amplitude.setUserProperties(userTraits);
+      logger.verbose("AmplitudeClient.getInstance().setUserProperties(%s);", userTraits);
+    }
 
     JSONObject groups = groups(identify);
     if (groups == null) {
@@ -134,6 +169,63 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
         logger.error(e, "error reading %s from %s", key, groups);
       }
     }
+  }
+
+  private void incrementAndSetTraits(Map<String, Object> traits) {
+    Identify identify = new Identify();
+
+    for (String trait : traitsToIncrement) {
+      if (traits.containsKey(trait) && traits.get(trait) != null) {
+        if (traits.get(trait) instanceof Double) {
+          double value = (Double) traits.get(trait);
+          identify.add(trait, value);
+        }
+        if (traits.get(trait) instanceof Float) {
+          float value = (Float) traits.get(trait);
+          identify.add(trait, value);
+        }
+        if (traits.get(trait) instanceof Integer) {
+          int value = (Integer) traits.get(trait);
+          identify.add(trait, value);
+        }
+        if (traits.get(trait) instanceof Long) {
+          long value = (Long) traits.get(trait);
+          identify.add(trait, value);
+        }
+        if (traits.get(trait) instanceof String) {
+          String value = String.valueOf(traits.get(trait));
+          identify.add(trait, value);
+        }
+        traits.remove(trait);
+      }
+    }
+
+    for (Map.Entry<String, Object> entry : traits.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      if (value instanceof Double) {
+        double doubleValue = (Double) traits.get(key);
+        identify.set(key, doubleValue);
+      }
+      if (value instanceof Float) {
+        float floatValue = (Float) traits.get(key);
+        identify.set(key, floatValue);
+      }
+      if (value instanceof Integer) {
+        int intValue = (Integer) traits.get(key);
+        identify.set(key, intValue);
+      }
+      if (value instanceof Long) {
+        long longValue = (Long) traits.get(key);
+        identify.set(key, longValue);
+      }
+      if (value instanceof String) {
+        String stringValue = String.valueOf(traits.get(key));
+        identify.set(key, stringValue);
+      }
+    }
+    amplitude.identify(identify);
+    logger.verbose("Amplitude.getInstance().identify(identify)");
   }
 
   @Override
