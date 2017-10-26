@@ -146,9 +146,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
 
     Traits traits = identify.traits();
     if (!isNullOrEmpty(traitsToIncrement)) {
-      Map<String, Object> traitsMap = new HashMap<>();
-      traitsMap.putAll(traits);
-      incrementAndSetTraits(traitsMap);
+      incrementAndSetTraits(traits);
     } else {
       JSONObject userTraits = traits.toJsonObject();
       amplitude.setUserProperties(userTraits);
@@ -171,57 +169,54 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     }
   }
 
-  private void incrementAndSetTraits(Map<String, Object> traits) {
+  private void incrementAndSetTraits(Traits traits) {
     Identify identify = new Identify();
-
-    for (String trait : traitsToIncrement) {
-      if (traits.containsKey(trait) && traits.get(trait) != null) {
-        if (traits.get(trait) instanceof Double) {
-          double value = (Double) traits.get(trait);
-          identify.add(trait, value);
-        }
-        if (traits.get(trait) instanceof Float) {
-          float value = (Float) traits.get(trait);
-          identify.add(trait, value);
-        }
-        if (traits.get(trait) instanceof Integer) {
-          int value = (Integer) traits.get(trait);
-          identify.add(trait, value);
-        }
-        if (traits.get(trait) instanceof Long) {
-          long value = (Long) traits.get(trait);
-          identify.add(trait, value);
-        }
-        if (traits.get(trait) instanceof String) {
-          String value = String.valueOf(traits.get(trait));
-          identify.add(trait, value);
-        }
-        traits.remove(trait);
-      }
-    }
 
     for (Map.Entry<String, Object> entry : traits.entrySet()) {
       String key = entry.getKey();
       Object value = entry.getValue();
-      if (value instanceof Double) {
-        double doubleValue = (Double) traits.get(key);
-        identify.set(key, doubleValue);
-      }
-      if (value instanceof Float) {
-        float floatValue = (Float) traits.get(key);
-        identify.set(key, floatValue);
-      }
-      if (value instanceof Integer) {
-        int intValue = (Integer) traits.get(key);
-        identify.set(key, intValue);
-      }
-      if (value instanceof Long) {
-        long longValue = (Long) traits.get(key);
-        identify.set(key, longValue);
-      }
-      if (value instanceof String) {
-        String stringValue = String.valueOf(traits.get(key));
-        identify.set(key, stringValue);
+      if (traitsToIncrement.contains(key)) {
+        if (value instanceof Double) {
+          double doubleValue = (Double) value;
+          identify.add(key, doubleValue);
+        }
+        if (value instanceof Float) {
+          float floatValue = (Float) value;
+          identify.add(key, floatValue);
+        }
+        if (value instanceof Integer) {
+          int intValue = (Integer) value;
+          identify.add(key, intValue);
+        }
+        if (value instanceof Long) {
+          long longValue = (Long) value;
+          identify.add(key, longValue);
+        }
+        if (value instanceof String) {
+          String stringValue = String.valueOf(value);
+          identify.add(key, stringValue);
+        }
+      } else {
+        if (value instanceof Double) {
+          double doubleValue = (Double) value;
+          identify.set(key, doubleValue);
+        }
+        if (value instanceof Float) {
+          float floatValue = (Float) value;
+          identify.set(key, floatValue);
+        }
+        if (value instanceof Integer) {
+          int intValue = (Integer) value;
+          identify.set(key, intValue);
+        }
+        if (value instanceof Long) {
+          long longValue = (Long) value;
+          identify.set(key, longValue);
+        }
+        if (value instanceof String) {
+          String stringValue = String.valueOf(value);
+          identify.set(key, stringValue);
+        }
       }
     }
     amplitude.identify(identify);
