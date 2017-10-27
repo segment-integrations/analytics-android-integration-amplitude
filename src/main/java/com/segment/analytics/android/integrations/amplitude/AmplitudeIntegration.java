@@ -240,7 +240,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     super.track(track);
 
     JSONObject groups = groups(track);
-    Map<String, Object> eventOptions = track.integrations().getValueMap("Amplitude");
+    Map<String, Object> eventOptions = track.integrations().getValueMap(AMPLITUDE_KEY);
     event(track.event(), track.properties(), eventOptions, groups);
   }
 
@@ -264,10 +264,10 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   }
 
   private void event(
-          @NonNull String name,
-          @NonNull Properties properties,
-          @Nullable Map options,
-          @Nullable JSONObject groups) {
+      @NonNull String name,
+      @NonNull Properties properties,
+      @Nullable Map options,
+      @Nullable JSONObject groups) {
     JSONObject propertiesJSON = properties.toJsonObject();
     boolean outOfSession = false;
 
@@ -278,8 +278,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     }
     amplitude.logEvent(name, propertiesJSON, groups, outOfSession);
     logger.verbose(
-            "AmplitudeClient.getInstance().logEvent(%s, %s, %s, %s);",
-            name, propertiesJSON, groups, outOfSession);
+        "AmplitudeClient.getInstance().logEvent(%s, %s, %s, %s);",
+        name, propertiesJSON, groups, outOfSession);
 
     // use containsKey since revenue and total can have negative values.
     if (properties.containsKey("revenue") || properties.containsKey("total")) {
