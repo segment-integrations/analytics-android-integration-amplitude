@@ -66,6 +66,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   String groupTypeTrait;
   String groupValueTrait;
   Set<String> traitsToIncrement;
+  Set<String> traitsToSetOnce;
 
   // Using PowerMockito fails with https://cloudup.com/c5JPuvmTCaH. So we introduce a provider
   // abstraction to mock what AmplitudeClient.getInstance() returns.
@@ -91,6 +92,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     groupTypeTrait = settings.getString("groupTypeTrait");
     groupValueTrait = settings.getString("groupTypeValue");
     traitsToIncrement = getStringSet(settings, "traitsToIncrement");
+    traitsToSetOnce = getStringSet(settings, "traitsToSetOnce");
     logger = analytics.logger(AMPLITUDE_KEY);
 
     String apiKey = settings.getString("apiKey");
@@ -145,7 +147,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     logger.verbose("AmplitudeClient.getInstance().setUserId(%s);", userId);
 
     Traits traits = identify.traits();
-    if (!isNullOrEmpty(traitsToIncrement)) {
+    if (!isNullOrEmpty(traitsToIncrement) || !isNullOrEmpty(traitsToSetOnce)) {
       handleTraits(traits);
     } else {
       JSONObject userTraits = traits.toJsonObject();
@@ -176,6 +178,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
       Object value = entry.getValue();
       if (traitsToIncrement.contains(key)) {
         incrementTrait(key, value, identify);
+      } else if(traitsToSetOnce.contains(key)) {
+        setOnce(key, value, identify);
       } else {
         setTrait(key, value, identify);
       }
@@ -204,6 +208,29 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     if (value instanceof String) {
       String stringValue = String.valueOf(value);
       identify.add(key, stringValue);
+    }
+  }
+
+  private void setOnce(String key, Object value, Identify identify) {
+    if (value instanceof Double) {
+      double doubleValue = (Double) value;
+      identify.setOnce(key, doubleValue);
+    }
+    if (value instanceof Float) {
+      float floatValue = (Float) value;
+      identify.setOnce(key, floatValue);
+    }
+    if (value instanceof Integer) {
+      int intValue = (Integer) value;
+      identify.setOnce(key, intValue);
+    }
+    if (value instanceof Long) {
+      long longValue = (Long) value;
+      identify.setOnce(key, longValue);
+    }
+    if (value instanceof String) {
+      String stringValue = String.valueOf(value);
+      identify.setOnce(key, stringValue);
     }
   }
 

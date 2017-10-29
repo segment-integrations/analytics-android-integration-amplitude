@@ -1,17 +1,5 @@
 package com.segment.analytics.android.integrations.amplitude;
 
-import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
-import static com.segment.analytics.Utils.createTraits;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isNull;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
-
 import android.app.Application;
 
 import com.amplitude.api.AmplitudeClient;
@@ -33,6 +21,7 @@ import com.segment.analytics.test.GroupPayloadBuilder;
 import com.segment.analytics.test.IdentifyPayloadBuilder;
 import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
+
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.json.JSONArray;
@@ -48,6 +37,18 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.Arrays;
+
+import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
+import static com.segment.analytics.Utils.createTraits;
+import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
@@ -398,6 +399,22 @@ public class AmplitudeTest {
 
     Identify identify = new Identify();
     identify.add("numberOfVisits", 100);
+
+    ArgumentCaptor<Identify> identifyObject = ArgumentCaptor.forClass(Identify.class);
+    verify(amplitude).identify(identifyObject.capture());
+    assertThat(identify.equals(identifyObject));
+  }
+
+  @Test
+  public void identifyWithSetOnce() {
+    ValueMap settings = new ValueMap().putValue("traitsToSetOnce", Arrays.asList("age"));
+    integration.traitsToSetOnce = integration.getStringSet(settings, "traitsToSetOnce");
+    Traits traits = createTraits("foo").putValue("age", 120);
+    IdentifyPayload payload = new IdentifyPayloadBuilder().traits(traits).build();
+    integration.identify(payload);
+
+    Identify identify = new Identify();
+    identify.add("numberOfVisits", 120);
 
     ArgumentCaptor<Identify> identifyObject = ArgumentCaptor.forClass(Identify.class);
     verify(amplitude).identify(identifyObject.capture());
