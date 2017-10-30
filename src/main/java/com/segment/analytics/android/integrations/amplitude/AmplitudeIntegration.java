@@ -320,13 +320,11 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     }
   }
 
-  private boolean getOptOutOfSessionFromOptions(Map options) {
+  private boolean getOptOutOfSessionFromOptions(@Nullable Map options) {
     boolean outOfSession = false;
 
     if (!isNullOrEmpty(options)) {
-      if (options.containsKey("outOfSession")
-          && options.get("outOfSession") != null
-          && options.get("outOfSession") instanceof Boolean) {
+      if (options.containsKey("outOfSession") && options.get("outOfSession") instanceof Boolean) {
         outOfSession = (Boolean) options.get("outOfSession");
       }
     }
