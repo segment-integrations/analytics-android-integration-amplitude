@@ -178,7 +178,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
       Object value = entry.getValue();
       if (traitsToIncrement.contains(key)) {
         incrementTrait(key, value, identify);
-      } else if(traitsToSetOnce.contains(key)) {
+      } else if (traitsToSetOnce.contains(key)) {
         setOnce(key, value, identify);
       } else {
         setTrait(key, value, identify);
@@ -303,13 +303,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
       @Nullable Map options,
       @Nullable JSONObject groups) {
     JSONObject propertiesJSON = properties.toJsonObject();
-    boolean outOfSession = false;
+    boolean outOfSession = getOptOutOfSessionFromOptions(options);
 
-    if (!isNullOrEmpty(options)) {
-      if (options.containsKey("outOfSession") && options.get("outOfSession") != null && options.get("outOfSession") instanceof Boolean) {
-        outOfSession = (Boolean) options.get("outOfSession");
-      }
-    }
     amplitude.logEvent(name, propertiesJSON, groups, outOfSession);
     logger.verbose(
         "AmplitudeClient.getInstance().logEvent(%s, %s, %s, %s);",
@@ -323,6 +318,19 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
         logRevenueV1(properties);
       }
     }
+  }
+
+  private boolean getOptOutOfSessionFromOptions(Map options) {
+    boolean outOfSession = false;
+
+    if (!isNullOrEmpty(options)) {
+      if (options.containsKey("outOfSession")
+          && options.get("outOfSession") != null
+          && options.get("outOfSession") instanceof Boolean) {
+        outOfSession = (Boolean) options.get("outOfSession");
+      }
+    }
+    return outOfSession;
   }
 
   @SuppressWarnings("deprecation")
