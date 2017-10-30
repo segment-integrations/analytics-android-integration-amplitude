@@ -88,12 +88,14 @@ public class AmplitudeTest {
   public void initialize() {
     integration = new AmplitudeIntegration(mockProvider, analytics,
         new ValueMap().putValue("apiKey", "foo")
+            .putValue("trackAllPagesV2", true)
             .putValue("trackAllPages", true)
             .putValue("trackCategorizedPages", false)
             .putValue("trackNamedPages", true)
             .putValue("enableLocationListening", true)
             .putValue("useAdvertisingIdForDeviceId", true));
 
+    assertThat(integration.trackAllPagesV2).isTrue();
     assertThat(integration.trackAllPages).isTrue();
     assertThat(integration.trackCategorizedPages).isFalse();
     assertThat(integration.trackNamedPages).isTrue();
@@ -441,6 +443,7 @@ public class AmplitudeTest {
 
   @Test
   public void screen() {
+    integration.trackAllPagesV2 = false;
     integration.trackAllPages = false;
     integration.trackCategorizedPages = false;
     integration.trackNamedPages = false;
@@ -452,6 +455,7 @@ public class AmplitudeTest {
 
   @Test
   public void screenTrackNamedPages() {
+    integration.trackAllPagesV2 = false;
     integration.trackAllPages = false;
     integration.trackCategorizedPages = false;
     integration.trackNamedPages = true;
@@ -465,6 +469,7 @@ public class AmplitudeTest {
 
   @Test
   public void screenTrackCategorizedPages() {
+    integration.trackAllPagesV2 = false;
     integration.trackAllPages = false;
     integration.trackCategorizedPages = true;
     integration.trackNamedPages = false;
@@ -478,6 +483,7 @@ public class AmplitudeTest {
 
   @Test
   public void screenTrackAllPages() {
+    integration.trackAllPagesV2 = false;
     integration.trackAllPages = true;
     integration.trackCategorizedPages = false;
     integration.trackNamedPages = false;
@@ -490,6 +496,14 @@ public class AmplitudeTest {
 
     integration.screen(new ScreenPayloadBuilder().category("bar").name("baz").build());
     verifyAmplitudeLoggedEvent("Viewed baz Screen", new JSONObject());
+  }
+
+  @Test
+  public void screenTrackAllPagesV2() throws JSONException {
+    Properties properties = new Properties();
+    properties.putValue("bar", "baz");
+    integration.screen(new ScreenPayloadBuilder().name("foo").properties(properties).build());
+    verifyAmplitudeLoggedEvent("Loaded a Screen", new JSONObject().put("name", "foo").put("bar", "baz"));
   }
 
   @Test

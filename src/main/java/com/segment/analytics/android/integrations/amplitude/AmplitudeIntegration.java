@@ -60,6 +60,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   private final Logger logger;
   // mutable for testing.
   boolean trackAllPages;
+  boolean trackAllPagesV2;
   boolean trackCategorizedPages;
   boolean trackNamedPages;
   boolean useLogRevenueV2;
@@ -86,6 +87,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   AmplitudeIntegration(Provider provider, Analytics analytics, ValueMap settings) {
     amplitude = provider.get();
     trackAllPages = settings.getBoolean("trackAllPages", false);
+    trackAllPagesV2 = settings.getBoolean("trackAllPagesV2", true);
     trackCategorizedPages = settings.getBoolean("trackCategorizedPages", false);
     trackNamedPages = settings.getBoolean("trackNamedPages", false);
     useLogRevenueV2 = settings.getBoolean("useLogRevenueV2", false);
@@ -178,7 +180,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
       Object value = entry.getValue();
       if (traitsToIncrement.contains(key)) {
         incrementTrait(key, value, identify);
-      } else if(traitsToSetOnce.contains(key)) {
+      } else if (traitsToSetOnce.contains(key)) {
         setOnce(key, value, identify);
       } else {
         setTrait(key, value, identify);
@@ -260,6 +262,14 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   @Override
   public void screen(ScreenPayload screen) {
     super.screen(screen);
+    if (trackAllPagesV2) {
+      Properties properties = new Properties();
+      properties.putAll(screen.properties());
+      properties.put("name", screen.name());
+      event("Loaded a Screen", properties, null, null);
+      return;
+    }
+
     if (trackAllPages) {
       event(String.format(VIEWED_EVENT_FORMAT, screen.event()), screen.properties(), null, null);
     } else if (trackCategorizedPages && !isNullOrEmpty(screen.category())) {
