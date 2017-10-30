@@ -66,6 +66,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   String groupTypeTrait;
   String groupValueTrait;
   Set<String> traitsToIncrement;
+  Set<String> traitsToSetOnce;
 
   // Using PowerMockito fails with https://cloudup.com/c5JPuvmTCaH. So we introduce a provider
   // abstraction to mock what AmplitudeClient.getInstance() returns.
@@ -91,6 +92,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     groupTypeTrait = settings.getString("groupTypeTrait");
     groupValueTrait = settings.getString("groupTypeValue");
     traitsToIncrement = getStringSet(settings, "traitsToIncrement");
+    traitsToSetOnce = getStringSet(settings, "traitsToSetOnce");
     logger = analytics.logger(AMPLITUDE_KEY);
 
     String apiKey = settings.getString("apiKey");
@@ -145,8 +147,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     logger.verbose("AmplitudeClient.getInstance().setUserId(%s);", userId);
 
     Traits traits = identify.traits();
-    if (!isNullOrEmpty(traitsToIncrement)) {
-      incrementAndSetTraits(traits);
+    if (!isNullOrEmpty(traitsToIncrement) || !isNullOrEmpty(traitsToSetOnce)) {
+      handleTraits(traits);
     } else {
       JSONObject userTraits = traits.toJsonObject();
       amplitude.setUserProperties(userTraits);
@@ -169,58 +171,90 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     }
   }
 
-  private void incrementAndSetTraits(Traits traits) {
+  private void handleTraits(Traits traits) {
     Identify identify = new Identify();
-
     for (Map.Entry<String, Object> entry : traits.entrySet()) {
       String key = entry.getKey();
       Object value = entry.getValue();
       if (traitsToIncrement.contains(key)) {
-        if (value instanceof Double) {
-          double doubleValue = (Double) value;
-          identify.add(key, doubleValue);
-        }
-        if (value instanceof Float) {
-          float floatValue = (Float) value;
-          identify.add(key, floatValue);
-        }
-        if (value instanceof Integer) {
-          int intValue = (Integer) value;
-          identify.add(key, intValue);
-        }
-        if (value instanceof Long) {
-          long longValue = (Long) value;
-          identify.add(key, longValue);
-        }
-        if (value instanceof String) {
-          String stringValue = String.valueOf(value);
-          identify.add(key, stringValue);
-        }
+        incrementTrait(key, value, identify);
+      } else if(traitsToSetOnce.contains(key)) {
+        setOnce(key, value, identify);
       } else {
-        if (value instanceof Double) {
-          double doubleValue = (Double) value;
-          identify.set(key, doubleValue);
-        }
-        if (value instanceof Float) {
-          float floatValue = (Float) value;
-          identify.set(key, floatValue);
-        }
-        if (value instanceof Integer) {
-          int intValue = (Integer) value;
-          identify.set(key, intValue);
-        }
-        if (value instanceof Long) {
-          long longValue = (Long) value;
-          identify.set(key, longValue);
-        }
-        if (value instanceof String) {
-          String stringValue = String.valueOf(value);
-          identify.set(key, stringValue);
-        }
+        setTrait(key, value, identify);
       }
     }
     amplitude.identify(identify);
     logger.verbose("Amplitude.getInstance().identify(identify)");
+  }
+
+  private void incrementTrait(String key, Object value, Identify identify) {
+    if (value instanceof Double) {
+      double doubleValue = (Double) value;
+      identify.add(key, doubleValue);
+    }
+    if (value instanceof Float) {
+      float floatValue = (Float) value;
+      identify.add(key, floatValue);
+    }
+    if (value instanceof Integer) {
+      int intValue = (Integer) value;
+      identify.add(key, intValue);
+    }
+    if (value instanceof Long) {
+      long longValue = (Long) value;
+      identify.add(key, longValue);
+    }
+    if (value instanceof String) {
+      String stringValue = String.valueOf(value);
+      identify.add(key, stringValue);
+    }
+  }
+
+  private void setOnce(String key, Object value, Identify identify) {
+    if (value instanceof Double) {
+      double doubleValue = (Double) value;
+      identify.setOnce(key, doubleValue);
+    }
+    if (value instanceof Float) {
+      float floatValue = (Float) value;
+      identify.setOnce(key, floatValue);
+    }
+    if (value instanceof Integer) {
+      int intValue = (Integer) value;
+      identify.setOnce(key, intValue);
+    }
+    if (value instanceof Long) {
+      long longValue = (Long) value;
+      identify.setOnce(key, longValue);
+    }
+    if (value instanceof String) {
+      String stringValue = String.valueOf(value);
+      identify.setOnce(key, stringValue);
+    }
+  }
+
+  private void setTrait(String key, Object value, Identify identify) {
+    if (value instanceof Double) {
+      double doubleValue = (Double) value;
+      identify.set(key, doubleValue);
+    }
+    if (value instanceof Float) {
+      float floatValue = (Float) value;
+      identify.set(key, floatValue);
+    }
+    if (value instanceof Integer) {
+      int intValue = (Integer) value;
+      identify.set(key, intValue);
+    }
+    if (value instanceof Long) {
+      long longValue = (Long) value;
+      identify.set(key, longValue);
+    }
+    if (value instanceof String) {
+      String stringValue = String.valueOf(value);
+      identify.set(key, stringValue);
+    }
   }
 
   @Override
