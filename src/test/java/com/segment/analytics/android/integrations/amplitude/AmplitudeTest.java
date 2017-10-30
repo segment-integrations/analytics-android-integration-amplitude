@@ -1,6 +1,7 @@
 package com.segment.analytics.android.integrations.amplitude;
 
 import android.app.Application;
+import android.support.annotation.Nullable;
 
 import com.amplitude.api.AmplitudeClient;
 import com.amplitude.api.Identify;
@@ -37,6 +38,8 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
 import static com.segment.analytics.Utils.createTraits;
@@ -180,15 +183,48 @@ public class AmplitudeTest {
     integration.track(new TrackPayloadBuilder()
             .event("foo")
             .properties(properties)
-            .options(new Options()
-                    .setIntegrationOptions("Amplitude", new ValueMap()
-                            .putValue("outOfSession", true)
-                    )
-            )
             .build());
 
-    verify(amplitude)
-            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(true));
+    verifyOutOfSession("foo", new JSONObject(), null);
+
+    Options options = new Options();
+    Map<String, Object> amplitudeOptions = new HashMap<>();
+    amplitudeOptions.put("outOfSession", true);
+    options.setIntegrationOptions("Amplitude", amplitudeOptions);
+
+    integration.track(new TrackPayloadBuilder()
+            .event("foo")
+            .properties(properties)
+            .options(options)
+            .build());
+
+    verifyOutOfSession("foo", new JSONObject(), amplitudeOptions);
+
+    Options options1 = new Options();
+    Map<String, Object> amplitudeOptions1 = new HashMap<>();
+    amplitudeOptions.put("outOfSession", "random string");
+    options.setIntegrationOptions("Amplitude", amplitudeOptions1);
+
+    integration.track(new TrackPayloadBuilder()
+            .event("foo")
+            .properties(properties)
+            .options(options1)
+            .build());
+
+    verifyOutOfSession("foo", new JSONObject(), amplitudeOptions1);
+
+    Options options2 = new Options();
+    Map<String, Object> amplitudeOptions2 = new HashMap<>();
+    amplitudeOptions.put("testing", "testing");
+    options.setIntegrationOptions("Amplitude", amplitudeOptions2);
+
+    integration.track(new TrackPayloadBuilder()
+            .event("foo")
+            .properties(properties)
+            .options(options2)
+            .build());
+
+    verifyOutOfSession("foo", new JSONObject(), amplitudeOptions2);
   }
 
   @Test
@@ -605,6 +641,30 @@ public class AmplitudeTest {
   private void verifyAmplitudeLoggedEvent(String event, JSONObject jsonObject) {
     verify(amplitude).logEvent(eq(event), jsonEq(jsonObject), isNull(JSONObject.class), eq(false));
   }
+
+  private void verifyOutOfSession(String event, JSONObject jsonObject, @Nullable Map options) {
+    if (options == null) {
+      verify(amplitude).logEvent(eq(event), jsonEq(jsonObject), isNull(JSONObject.class), eq(false));
+      Mockito.reset(amplitude);
+      return;
+    }
+    if (options.containsKey("outOfSession") && options.get("outOfSession") instanceof Boolean) {
+      verify(amplitude).logEvent(eq(event), jsonEq(jsonObject), isNull(JSONObject.class), eq(true));
+      Mockito.reset(amplitude);
+      return;
+    }
+    if (options.containsKey("outOfSession") && !(options.get("outOfSession") instanceof Boolean)) {
+      verify(amplitude).logEvent(eq(event), jsonEq(jsonObject), isNull(JSONObject.class), eq(false));
+      Mockito.reset(amplitude);
+      return;
+    }
+    if (!options.containsKey("outOfSession")) {
+      verify(amplitude).logEvent(eq(event), jsonEq(jsonObject), isNull(JSONObject.class), eq(false));
+      Mockito.reset(amplitude);
+      return;
+    }
+  }
+
 
   public static JSONObject jsonEq(JSONObject expected) {
     return argThat(new JSONObjectMatcher(expected));
