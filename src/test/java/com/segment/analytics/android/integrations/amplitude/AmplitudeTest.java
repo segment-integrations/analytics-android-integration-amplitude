@@ -125,7 +125,7 @@ public class AmplitudeTest {
     integration.track(new TrackPayloadBuilder().event("foo").properties(properties).build());
 
     verify(amplitude)
-        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
     verifyNoMoreInteractions(amplitude);
   }
 
@@ -146,7 +146,7 @@ public class AmplitudeTest {
     JSONObject groups = new JSONObject();
     groups.put("foo", "bar");
     verify(amplitude)
-        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), jsonEq(groups));
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), jsonEq(groups), eq(false));
     verifyNoMoreInteractions(amplitude);
   }
 
@@ -168,8 +168,26 @@ public class AmplitudeTest {
     JSONObject groups = new JSONObject();
     groups.put("sports", new JSONArray().put("basketball").put("tennis"));
     verify(amplitude)
-        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), jsonEq(groups));
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), jsonEq(groups), eq(false));
     verifyNoMoreInteractions(amplitude);
+  }
+
+  @Test
+  public void trackOutOfSession() {
+    Properties properties = new Properties();
+
+    integration.track(new TrackPayloadBuilder()
+            .event("foo")
+            .properties(properties)
+            .options(new Options()
+                    .setIntegrationOptions("Amplitude", new ValueMap()
+                            .putValue("outOfSession", true)
+                    )
+            )
+            .build());
+
+    verify(amplitude)
+            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(true));
   }
 
   @Test
@@ -184,7 +202,7 @@ public class AmplitudeTest {
 
     integration.track(trackPayload);
     verify(amplitude)
-        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
     verify(amplitude).logRevenue("bar", 10, 20, "baz", "qux");
   }
 
@@ -200,7 +218,7 @@ public class AmplitudeTest {
 
     integration.track(trackPayload);
     verify(amplitude)
-            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
     verify(amplitude).logRevenue("bar", 10, 15, "baz", "qux");
   }
 
@@ -218,7 +236,7 @@ public class AmplitudeTest {
 
     integration.track(trackPayload);
     verify(amplitude)
-        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     Revenue expectedRevenue = new Revenue().setProductId("bar")
         .setPrice(20)
@@ -243,7 +261,7 @@ public class AmplitudeTest {
 
     integration.track(trackPayload);
     verify(amplitude)
-        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     expectedRevenue = new Revenue().setProductId("bar")
         .setPrice(2)
@@ -264,7 +282,7 @@ public class AmplitudeTest {
     trackPayload = new TrackPayloadBuilder().event("foo").properties(properties).build();
     integration.track(trackPayload);
     verify(amplitude)
-        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+        .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     verifyNoMoreInteractions(amplitude);
   }
@@ -283,7 +301,7 @@ public class AmplitudeTest {
 
     integration.track(trackPayload);
     verify(amplitude)
-            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     Revenue expectedRevenue = new Revenue().setProductId("bar")
             .setPrice(20)
@@ -308,7 +326,7 @@ public class AmplitudeTest {
 
     integration.track(trackPayload);
     verify(amplitude)
-            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     expectedRevenue = new Revenue().setProductId("bar")
             .setPrice(2)
@@ -329,7 +347,7 @@ public class AmplitudeTest {
     trackPayload = new TrackPayloadBuilder().event("foo").properties(properties).build();
     integration.track(trackPayload);
     verify(amplitude)
-            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class));
+            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     verifyNoMoreInteractions(amplitude);
   }
@@ -568,7 +586,7 @@ public class AmplitudeTest {
   }
 
   private void verifyAmplitudeLoggedEvent(String event, JSONObject jsonObject) {
-    verify(amplitude).logEvent(eq(event), jsonEq(jsonObject), isNull(JSONObject.class));
+    verify(amplitude).logEvent(eq(event), jsonEq(jsonObject), isNull(JSONObject.class), eq(false));
   }
 
   public static JSONObject jsonEq(JSONObject expected) {

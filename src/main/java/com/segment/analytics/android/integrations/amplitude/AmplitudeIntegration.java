@@ -227,11 +227,11 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   public void screen(ScreenPayload screen) {
     super.screen(screen);
     if (trackAllPages) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.event()), screen.properties(), null);
+      event(String.format(VIEWED_EVENT_FORMAT, screen.event()), screen.properties(), null, null);
     } else if (trackCategorizedPages && !isNullOrEmpty(screen.category())) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.category()), screen.properties(), null);
+      event(String.format(VIEWED_EVENT_FORMAT, screen.category()), screen.properties(), null, null);
     } else if (trackNamedPages && !isNullOrEmpty(screen.name())) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.name()), screen.properties(), null);
+      event(String.format(VIEWED_EVENT_FORMAT, screen.name()), screen.properties(), null, null);
     }
   }
 
@@ -240,8 +240,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     super.track(track);
 
     JSONObject groups = groups(track);
-
-    event(track.event(), track.properties(), groups);
+    Map<String, Object> eventOptions = track.integrations().getValueMap(AMPLITUDE_KEY);
+    event(track.event(), track.properties(), eventOptions, groups);
   }
 
   static @Nullable JSONObject groups(BasePayload payload) {
@@ -264,11 +264,22 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   }
 
   private void event(
-      @NonNull String name, @NonNull Properties properties, @Nullable JSONObject groups) {
+      @NonNull String name,
+      @NonNull Properties properties,
+      @Nullable Map options,
+      @Nullable JSONObject groups) {
     JSONObject propertiesJSON = properties.toJsonObject();
-    amplitude.logEvent(name, propertiesJSON, groups);
+    boolean outOfSession = false;
+
+    if (!isNullOrEmpty(options)) {
+      if (options.containsKey("outOfSession") && options.get("outOfSession") != null) {
+        outOfSession = (Boolean) options.get("outOfSession");
+      }
+    }
+    amplitude.logEvent(name, propertiesJSON, groups, outOfSession);
     logger.verbose(
-        "AmplitudeClient.getInstance().logEvent(%s, %s, %s);", name, propertiesJSON, groups);
+        "AmplitudeClient.getInstance().logEvent(%s, %s, %s, %s);",
+        name, propertiesJSON, groups, outOfSession);
 
     // use containsKey since revenue and total can have negative values.
     if (properties.containsKey("revenue") || properties.containsKey("total")) {
