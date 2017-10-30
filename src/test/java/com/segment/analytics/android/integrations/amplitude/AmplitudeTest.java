@@ -500,8 +500,10 @@ public class AmplitudeTest {
 
   @Test
   public void screenTrackAllPagesV2() throws JSONException {
-    integration.screen(new ScreenPayloadBuilder().name("foo").build());
-    verifyAmplitudeLoggedEvent("Loaded a Screen", new JSONObject().put("name", "foo"));
+    Properties properties = new Properties();
+    properties.putValue("bar", "baz");
+    integration.screen(new ScreenPayloadBuilder().name("foo").properties(properties).build());
+    verifyAmplitudeLoggedEvent("Loaded a Screen", new JSONObject().put("name", "foo").put("bar", "baz"));
   }
 
   @Test
