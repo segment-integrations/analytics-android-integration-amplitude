@@ -92,7 +92,7 @@ public class AmplitudeTest {
             .putValue("trackAllPages", true)
             .putValue("trackCategorizedPages", false)
             .putValue("trackNamedPages", true)
-            .putValue("enableLocationListening", false));
+            .putValue("enableLocationListening", false)
             .putValue("useAdvertisingIdForDeviceId", true));
 
     assertThat(integration.trackAllPagesV2).isTrue();
