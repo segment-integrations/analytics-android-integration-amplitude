@@ -108,10 +108,11 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     amplitude.trackSessionEvents(trackSessionEvents);
     logger.verbose("AmplitudeClient.getInstance().trackSessionEvents(%s);", trackSessionEvents);
 
-    boolean enableLocationListening = settings.getBoolean("enableLocationListening", false);
-    if (enableLocationListening) {
-      amplitude.enableLocationListening();
+    boolean enableLocationListening = settings.getBoolean("enableLocationListening", true);
+    if (!enableLocationListening) {
+      amplitude.disableLocationListening();
     }
+    
     boolean useAdvertisingIdForDeviceId = settings.getBoolean("useAdvertisingIdForDeviceId", false);
     if (useAdvertisingIdForDeviceId) {
       amplitude.useAdvertisingIdForDeviceId();
