@@ -303,12 +303,11 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
       @Nullable Map options,
       @Nullable JSONObject groups) {
     JSONObject propertiesJSON = properties.toJsonObject();
-    boolean outOfSession = getOptOutOfSessionFromOptions(options);
 
-    amplitude.logEvent(name, propertiesJSON, groups, outOfSession);
+    amplitude.logEvent(name, propertiesJSON, groups, getOptOutOfSessionFromOptions(options));
     logger.verbose(
         "AmplitudeClient.getInstance().logEvent(%s, %s, %s, %s);",
-        name, propertiesJSON, groups, outOfSession);
+        name, propertiesJSON, groups, getOptOutOfSessionFromOptions(options));
 
     // use containsKey since revenue and total can have negative values.
     if (properties.containsKey("revenue") || properties.containsKey("total")) {
@@ -321,14 +320,13 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   }
 
   private boolean getOptOutOfSessionFromOptions(@Nullable Map options) {
-    boolean outOfSession = false;
-
-    if (!isNullOrEmpty(options)) {
-      if (options.containsKey("outOfSession") && options.get("outOfSession") instanceof Boolean) {
-        outOfSession = (Boolean) options.get("outOfSession");
-      }
+    if (isNullOrEmpty(options)) {
+      return false;
     }
-    return outOfSession;
+    if (options.containsKey("outOfSession") && options.get("outOfSession") instanceof Boolean) {
+      return (Boolean) options.get("outOfSession");
+    }
+    return false;
   }
 
   @SuppressWarnings("deprecation")
