@@ -323,7 +323,11 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     if (isNullOrEmpty(options)) {
       return false;
     }
-    if (options.containsKey("outOfSession") && options.get("outOfSession") instanceof Boolean) {
+    Object outOfSession = options.get("outOfSession");
+    if (outOfSession == null) {
+      return false;
+    }
+    if (outOfSession instanceof Boolean) {
       return (Boolean) options.get("outOfSession");
     }
     return false;
