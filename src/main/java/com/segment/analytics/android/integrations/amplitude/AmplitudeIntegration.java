@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.amplitude.api.Amplitude;
 import com.amplitude.api.AmplitudeClient;
+import com.amplitude.api.Identify;
 import com.amplitude.api.Revenue;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
@@ -18,7 +19,15 @@ import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -51,11 +60,14 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   private final Logger logger;
   // mutable for testing.
   boolean trackAllPages;
+  boolean trackAllPagesV2;
   boolean trackCategorizedPages;
   boolean trackNamedPages;
   boolean useLogRevenueV2;
   String groupTypeTrait;
   String groupValueTrait;
+  Set<String> traitsToIncrement;
+  Set<String> traitsToSetOnce;
 
   // Using PowerMockito fails with https://cloudup.com/c5JPuvmTCaH. So we introduce a provider
   // abstraction to mock what AmplitudeClient.getInstance() returns.
@@ -75,11 +87,14 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   AmplitudeIntegration(Provider provider, Analytics analytics, ValueMap settings) {
     amplitude = provider.get();
     trackAllPages = settings.getBoolean("trackAllPages", false);
+    trackAllPagesV2 = settings.getBoolean("trackAllPagesV2", true);
     trackCategorizedPages = settings.getBoolean("trackCategorizedPages", false);
     trackNamedPages = settings.getBoolean("trackNamedPages", false);
     useLogRevenueV2 = settings.getBoolean("useLogRevenueV2", false);
     groupTypeTrait = settings.getString("groupTypeTrait");
     groupValueTrait = settings.getString("groupTypeValue");
+    traitsToIncrement = getStringSet(settings, "traitsToIncrement");
+    traitsToSetOnce = getStringSet(settings, "traitsToSetOnce");
     logger = analytics.logger(AMPLITUDE_KEY);
 
     String apiKey = settings.getString("apiKey");
@@ -97,6 +112,28 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     if (!enableLocationListening) {
       amplitude.disableLocationListening();
     }
+    
+    boolean useAdvertisingIdForDeviceId = settings.getBoolean("useAdvertisingIdForDeviceId", false);
+    if (useAdvertisingIdForDeviceId) {
+      amplitude.useAdvertisingIdForDeviceId();
+    }
+  }
+
+  public static Set<String> getStringSet(ValueMap valueMap, String key) {
+    try {
+      //noinspection unchecked
+      List<Object> incrementTraits = (List<Object>) valueMap.get(key);
+      if (incrementTraits == null || incrementTraits.size() == 0) {
+        return Collections.emptySet();
+      }
+      Set<String> stringSet = new HashSet<>(incrementTraits.size());
+      for (int i = 0; i < incrementTraits.size(); i++) {
+        stringSet.add((String) incrementTraits.get(i));
+      }
+      return stringSet;
+    } catch (ClassCastException e) {
+      return Collections.emptySet();
+    }
   }
 
   @Override
@@ -112,9 +149,14 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     amplitude.setUserId(userId);
     logger.verbose("AmplitudeClient.getInstance().setUserId(%s);", userId);
 
-    JSONObject traits = identify.traits().toJsonObject();
-    amplitude.setUserProperties(traits);
-    logger.verbose("AmplitudeClient.getInstance().setUserProperties(%s);", traits);
+    Traits traits = identify.traits();
+    if (!isNullOrEmpty(traitsToIncrement) || !isNullOrEmpty(traitsToSetOnce)) {
+      handleTraits(traits);
+    } else {
+      JSONObject userTraits = traits.toJsonObject();
+      amplitude.setUserProperties(userTraits);
+      logger.verbose("AmplitudeClient.getInstance().setUserProperties(%s);", userTraits);
+    }
 
     JSONObject groups = groups(identify);
     if (groups == null) {
@@ -132,15 +174,109 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     }
   }
 
+  private void handleTraits(Traits traits) {
+    Identify identify = new Identify();
+    for (Map.Entry<String, Object> entry : traits.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      if (traitsToIncrement.contains(key)) {
+        incrementTrait(key, value, identify);
+      } else if (traitsToSetOnce.contains(key)) {
+        setOnce(key, value, identify);
+      } else {
+        setTrait(key, value, identify);
+      }
+    }
+    amplitude.identify(identify);
+    logger.verbose("Amplitude.getInstance().identify(identify)");
+  }
+
+  private void incrementTrait(String key, Object value, Identify identify) {
+    if (value instanceof Double) {
+      double doubleValue = (Double) value;
+      identify.add(key, doubleValue);
+    }
+    if (value instanceof Float) {
+      float floatValue = (Float) value;
+      identify.add(key, floatValue);
+    }
+    if (value instanceof Integer) {
+      int intValue = (Integer) value;
+      identify.add(key, intValue);
+    }
+    if (value instanceof Long) {
+      long longValue = (Long) value;
+      identify.add(key, longValue);
+    }
+    if (value instanceof String) {
+      String stringValue = String.valueOf(value);
+      identify.add(key, stringValue);
+    }
+  }
+
+  private void setOnce(String key, Object value, Identify identify) {
+    if (value instanceof Double) {
+      double doubleValue = (Double) value;
+      identify.setOnce(key, doubleValue);
+    }
+    if (value instanceof Float) {
+      float floatValue = (Float) value;
+      identify.setOnce(key, floatValue);
+    }
+    if (value instanceof Integer) {
+      int intValue = (Integer) value;
+      identify.setOnce(key, intValue);
+    }
+    if (value instanceof Long) {
+      long longValue = (Long) value;
+      identify.setOnce(key, longValue);
+    }
+    if (value instanceof String) {
+      String stringValue = String.valueOf(value);
+      identify.setOnce(key, stringValue);
+    }
+  }
+
+  private void setTrait(String key, Object value, Identify identify) {
+    if (value instanceof Double) {
+      double doubleValue = (Double) value;
+      identify.set(key, doubleValue);
+    }
+    if (value instanceof Float) {
+      float floatValue = (Float) value;
+      identify.set(key, floatValue);
+    }
+    if (value instanceof Integer) {
+      int intValue = (Integer) value;
+      identify.set(key, intValue);
+    }
+    if (value instanceof Long) {
+      long longValue = (Long) value;
+      identify.set(key, longValue);
+    }
+    if (value instanceof String) {
+      String stringValue = String.valueOf(value);
+      identify.set(key, stringValue);
+    }
+  }
+
   @Override
   public void screen(ScreenPayload screen) {
     super.screen(screen);
+    if (trackAllPagesV2) {
+      Properties properties = new Properties();
+      properties.putAll(screen.properties());
+      properties.put("name", screen.name());
+      event("Loaded a Screen", properties, null, null);
+      return;
+    }
+
     if (trackAllPages) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.event()), screen.properties(), null);
+      event(String.format(VIEWED_EVENT_FORMAT, screen.event()), screen.properties(), null, null);
     } else if (trackCategorizedPages && !isNullOrEmpty(screen.category())) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.category()), screen.properties(), null);
+      event(String.format(VIEWED_EVENT_FORMAT, screen.category()), screen.properties(), null, null);
     } else if (trackNamedPages && !isNullOrEmpty(screen.name())) {
-      event(String.format(VIEWED_EVENT_FORMAT, screen.name()), screen.properties(), null);
+      event(String.format(VIEWED_EVENT_FORMAT, screen.name()), screen.properties(), null, null);
     }
   }
 
@@ -149,8 +285,8 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     super.track(track);
 
     JSONObject groups = groups(track);
-
-    event(track.event(), track.properties(), groups);
+    Map<String, Object> eventOptions = track.integrations().getValueMap(AMPLITUDE_KEY);
+    event(track.event(), track.properties(), eventOptions, groups);
   }
 
   static @Nullable JSONObject groups(BasePayload payload) {
@@ -173,11 +309,22 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   }
 
   private void event(
-      @NonNull String name, @NonNull Properties properties, @Nullable JSONObject groups) {
+      @NonNull String name,
+      @NonNull Properties properties,
+      @Nullable Map options,
+      @Nullable JSONObject groups) {
     JSONObject propertiesJSON = properties.toJsonObject();
-    amplitude.logEvent(name, propertiesJSON, groups);
+    boolean outOfSession = false;
+
+    if (!isNullOrEmpty(options)) {
+      if (options.containsKey("outOfSession") && options.get("outOfSession") != null) {
+        outOfSession = (Boolean) options.get("outOfSession");
+      }
+    }
+    amplitude.logEvent(name, propertiesJSON, groups, outOfSession);
     logger.verbose(
-        "AmplitudeClient.getInstance().logEvent(%s, %s, %s);", name, propertiesJSON, groups);
+        "AmplitudeClient.getInstance().logEvent(%s, %s, %s, %s);",
+        name, propertiesJSON, groups, outOfSession);
 
     // use containsKey since revenue and total can have negative values.
     if (properties.containsKey("revenue") || properties.containsKey("total")) {
