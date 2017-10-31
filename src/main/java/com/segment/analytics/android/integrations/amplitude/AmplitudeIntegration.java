@@ -1,9 +1,8 @@
 package com.segment.analytics.android.integrations.amplitude;
 
-import static com.segment.analytics.internal.Utils.isNullOrEmpty;
-
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.amplitude.api.Amplitude;
 import com.amplitude.api.AmplitudeClient;
 import com.amplitude.api.Identify;
@@ -20,16 +19,17 @@ import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import static com.segment.analytics.internal.Utils.isNullOrEmpty;
 
 /**
  * Amplitude is an event tracking and segmentation tool for your mobile apps. By analyzing the
