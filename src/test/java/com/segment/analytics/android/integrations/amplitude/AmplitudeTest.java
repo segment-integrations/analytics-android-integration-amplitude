@@ -194,6 +194,55 @@ public class AmplitudeTest {
   }
 
   @Test
+  public void trackOutOfSessionOptionsNull() {
+    Properties properties = new Properties();
+
+    integration.track(new TrackPayloadBuilder()
+            .event("foo")
+            .properties(properties)
+            .build());
+
+    verify(amplitude)
+            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
+  }
+
+  @Test
+  public void trackOutOfSessionNotInstanceOfBoolean() {
+    Properties properties = new Properties();
+
+    integration.track(new TrackPayloadBuilder()
+            .event("foo")
+            .properties(properties)
+            .options(new Options()
+                    .setIntegrationOptions("Amplitude", new ValueMap()
+                            .putValue("outOfSession", "string")
+                    )
+            )
+            .build());
+
+    verify(amplitude)
+            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
+  }
+
+  @Test
+  public void trackOutOfSessionKeyNotSet() {
+    Properties properties = new Properties();
+
+    integration.track(new TrackPayloadBuilder()
+            .event("foo")
+            .properties(properties)
+            .options(new Options()
+                    .setIntegrationOptions("Amplitude", new ValueMap()
+                            .putValue("randomSetting", "testing")
+                    )
+            )
+            .build());
+
+    verify(amplitude)
+            .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
+  }
+
+  @Test
   public void trackWithRevenue() {
     Properties properties = new Properties().putRevenue(20)
         .putValue("productId", "bar")

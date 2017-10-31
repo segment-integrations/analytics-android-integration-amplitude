@@ -1,9 +1,8 @@
 package com.segment.analytics.android.integrations.amplitude;
 
-import static com.segment.analytics.internal.Utils.isNullOrEmpty;
-
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.amplitude.api.Amplitude;
 import com.amplitude.api.AmplitudeClient;
 import com.amplitude.api.Identify;
@@ -20,16 +19,17 @@ import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import static com.segment.analytics.internal.Utils.isNullOrEmpty;
 
 /**
  * Amplitude is an event tracking and segmentation tool for your mobile apps. By analyzing the
@@ -314,17 +314,11 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
       @Nullable Map options,
       @Nullable JSONObject groups) {
     JSONObject propertiesJSON = properties.toJsonObject();
-    boolean outOfSession = false;
 
-    if (!isNullOrEmpty(options)) {
-      if (options.containsKey("outOfSession") && options.get("outOfSession") != null) {
-        outOfSession = (Boolean) options.get("outOfSession");
-      }
-    }
-    amplitude.logEvent(name, propertiesJSON, groups, outOfSession);
+    amplitude.logEvent(name, propertiesJSON, groups, getOptOutOfSessionFromOptions(options));
     logger.verbose(
         "AmplitudeClient.getInstance().logEvent(%s, %s, %s, %s);",
-        name, propertiesJSON, groups, outOfSession);
+        name, propertiesJSON, groups, getOptOutOfSessionFromOptions(options));
 
     // use containsKey since revenue and total can have negative values.
     if (properties.containsKey("revenue") || properties.containsKey("total")) {
@@ -334,6 +328,20 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
         logRevenueV1(properties);
       }
     }
+  }
+
+  private boolean getOptOutOfSessionFromOptions(@Nullable Map options) {
+    if (isNullOrEmpty(options)) {
+      return false;
+    }
+    Object outOfSession = options.get("outOfSession");
+    if (outOfSession == null) {
+      return false;
+    }
+    if (outOfSession instanceof Boolean) {
+      return (Boolean) options.get("outOfSession");
+    }
+    return false;
   }
 
   @SuppressWarnings("deprecation")
