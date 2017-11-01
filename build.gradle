@@ -10,7 +10,6 @@ buildscript {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'checkstyle'
 apply plugin: 'com.f2prateek.javafmt'
 
 android {
