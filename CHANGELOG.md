@@ -1,3 +1,14 @@
+Version 2.0.0 (November 1, 2017)
+================================
+*(Supports analytics-android 4.0.+ and Amplitude 2.15.+)*
+
+  * New: Adds support for `add` and `setOnce` for traits
+  * New: `trackAllPagesV2` setting; triggers `Loaded a Screen`
+  * New: Supports `enableLocationListening`
+  * New: Supports `useAdvertisingIdForDeviceId`
+  * New: Supports `outOfSession` events
+  * New: Supports specifying `groupName` and `groupValue` properties
+  * Fix: Sets userId to `null` on `.reset()`
 
 Version 1.3.0 (October 16, 2017)
 ==============================
