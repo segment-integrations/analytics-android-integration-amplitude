@@ -57,6 +57,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   private static final String VIEWED_EVENT_FORMAT = "Viewed %s Screen";
 
   private final AmplitudeClient amplitude;
+  private final Identify identify;
   private final Logger logger;
   // mutable for testing.
   boolean trackAllPages;
@@ -73,19 +74,27 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   // abstraction to mock what AmplitudeClient.getInstance() returns.
   interface Provider {
 
-    AmplitudeClient get();
+    AmplitudeClient getAmplitudeClient();
+
+    Identify getIdentify();
 
     Provider REAL =
         new Provider() {
           @Override
-          public AmplitudeClient get() {
+          public AmplitudeClient getAmplitudeClient() {
             return Amplitude.getInstance();
+          }
+
+          @Override
+          public Identify getIdentify() {
+            return new Identify();
           }
         };
   }
 
   AmplitudeIntegration(Provider provider, Analytics analytics, ValueMap settings) {
-    amplitude = provider.get();
+    amplitude = provider.getAmplitudeClient();
+    identify = provider.getIdentify();
     trackAllPages = settings.getBoolean("trackAllPages", false);
     trackAllPagesV2 = settings.getBoolean("trackAllPagesV2", true);
     trackCategorizedPages = settings.getBoolean("trackCategorizedPages", false);
@@ -175,7 +184,6 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
   }
 
   private void handleTraits(Traits traits) {
-    Identify identify = new Identify();
     for (Map.Entry<String, Object> entry : traits.entrySet()) {
       String key = entry.getKey();
       Object value = entry.getValue();

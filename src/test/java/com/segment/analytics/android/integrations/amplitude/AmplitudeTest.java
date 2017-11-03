@@ -1,7 +1,6 @@
 package com.segment.analytics.android.integrations.amplitude;
 
 import android.app.Application;
-
 import com.amplitude.api.AmplitudeClient;
 import com.amplitude.api.Identify;
 import com.amplitude.api.Revenue;
@@ -21,7 +20,9 @@ import com.segment.analytics.test.GroupPayloadBuilder;
 import com.segment.analytics.test.IdentifyPayloadBuilder;
 import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
-
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.json.JSONArray;
@@ -35,8 +36,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
-import java.util.Arrays;
 
 import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
 import static com.segment.analytics.Utils.createTraits;
@@ -57,11 +56,15 @@ public class AmplitudeTest {
   @Mock Application application;
   @Mock AmplitudeClient amplitude;
   @Mock Analytics analytics;
+  @Mock Identify identify;
   private AmplitudeIntegration integration;
   private AmplitudeIntegration.Provider mockProvider = new AmplitudeIntegration.Provider() {
     @Override
-    public AmplitudeClient get() {
+    public AmplitudeClient getAmplitudeClient() {
       return amplitude;
+    }
+    @Override public Identify getIdentify() {
+      return identify;
     }
   };
 
@@ -460,34 +463,62 @@ public class AmplitudeTest {
 
   @Test
   public void identifyWithIncrementedTraits() {
-    ValueMap settings = new ValueMap().putValue("traitsToIncrement", Arrays.asList("numberOfVisits"));
-    integration.traitsToIncrement = integration.getStringSet(settings, "traitsToIncrement");
-    Traits traits = createTraits("foo").putValue("numberOfVisits", 100);
+    integration.traitsToIncrement = new HashSet<>();
+    integration.traitsToIncrement.addAll(Arrays.asList("integer", "double", "float", "long", "string"));
+
+    int i = 120;
+    double d = 100.0;
+    float f = 100.0f;
+    long l = 100L;
+    String s = "value";
+
+    Traits traits = createTraits("foo")
+        .putValue("integer", i)
+        .putValue("double", d)
+        .putValue("float", f)
+        .putValue("long", l)
+        .putValue("string", s)
+        .putValue("random", "property");
+
     IdentifyPayload payload = new IdentifyPayloadBuilder().traits(traits).build();
     integration.identify(payload);
 
-    Identify identify = new Identify();
-    identify.add("numberOfVisits", 100);
-
-    ArgumentCaptor<Identify> identifyObject = ArgumentCaptor.forClass(Identify.class);
-    verify(amplitude).identify(identifyObject.capture());
-    assertThat(identify.equals(identifyObject));
+    verify(identify).add("integer",i);
+    verify(identify).add("double",d);
+    verify(identify).add("float",f);
+    verify(identify).add("long",l);
+    verify(identify).add("string",s);
+    verify(identify).set("random", "property");
   }
 
   @Test
   public void identifyWithSetOnce() {
-    ValueMap settings = new ValueMap().putValue("traitsToSetOnce", Arrays.asList("age"));
-    integration.traitsToSetOnce = integration.getStringSet(settings, "traitsToSetOnce");
-    Traits traits = createTraits("foo").putValue("age", 120);
+    integration.traitsToSetOnce = new HashSet<>();
+    integration.traitsToSetOnce.addAll(Arrays.asList("integer", "double", "float", "long", "string"));
+
+    int i = 120;
+    double d = 100.0;
+    float f = 100.0f;
+    long l = 100L;
+    String s = "value";
+
+    Traits traits = createTraits("foo")
+        .putValue("integer", i)
+        .putValue("double", d)
+        .putValue("float", f)
+        .putValue("long", l)
+        .putValue("string", s)
+        .putValue("random", "property");
+
     IdentifyPayload payload = new IdentifyPayloadBuilder().traits(traits).build();
     integration.identify(payload);
 
-    Identify identify = new Identify();
-    identify.add("numberOfVisits", 120);
-
-    ArgumentCaptor<Identify> identifyObject = ArgumentCaptor.forClass(Identify.class);
-    verify(amplitude).identify(identifyObject.capture());
-    assertThat(identify.equals(identifyObject));
+    verify(identify).setOnce("integer",i);
+    verify(identify).setOnce("double",d);
+    verify(identify).setOnce("float",f);
+    verify(identify).setOnce("long",l);
+    verify(identify).setOnce("string",s);
+    verify(identify).set("random", "property");
   }
 
   @Test
