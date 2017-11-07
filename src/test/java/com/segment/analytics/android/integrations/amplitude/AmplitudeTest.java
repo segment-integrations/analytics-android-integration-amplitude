@@ -346,11 +346,11 @@ public class AmplitudeTest {
     integration.useLogRevenueV2 = true;
     // first case missing prices field
     Properties properties = new Properties()
-            .putTotal(20)
-            .putValue("productId", "bar")
-            .putValue("quantity", 10)
-            .putValue("receipt", "baz")
-            .putValue("receiptSignature", "qux");
+        .putTotal(20)
+        .putValue("productId", "bar")
+        .putValue("quantity", 10)
+        .putValue("receipt", "baz")
+        .putValue("receiptSignature", "qux");
     TrackPayload trackPayload =
             new TrackPayloadBuilder().event("foo").properties(properties).build();
 
@@ -359,11 +359,11 @@ public class AmplitudeTest {
             .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     Revenue expectedRevenue = new Revenue()
-            .setProductId("bar")
-            .setPrice(20)
-            .setQuantity(1)
-            .setReceipt("baz", "qux")
-            .setEventProperties(properties.toJsonObject());
+        .setProductId("bar")
+        .setPrice(20)
+        .setQuantity(1)
+        .setReceipt("baz", "qux")
+        .setEventProperties(properties.toJsonObject());
 
     verify(amplitude).logRevenueV2(expectedRevenue);
 
@@ -371,12 +371,12 @@ public class AmplitudeTest {
 
     // second case has price and quantity
     properties = new Properties()
-            .putTotal(20)
-            .putValue("productId", "bar")
-            .putValue("quantity", 10)
-            .putValue("price", 2.00)
-            .putValue("receipt", "baz")
-            .putValue("receiptSignature", "qux");
+        .putTotal(20)
+        .putValue("productId", "bar")
+        .putValue("quantity", 10)
+        .putValue("price", 2.00)
+        .putValue("receipt", "baz")
+        .putValue("receiptSignature", "qux");
     trackPayload = new TrackPayloadBuilder().event("foo").properties(properties).build();
 
     integration.track(trackPayload);
@@ -384,21 +384,21 @@ public class AmplitudeTest {
             .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     expectedRevenue = new Revenue()
-            .setProductId("bar")
-            .setPrice(2)
-            .setQuantity(10)
-            .setReceipt("baz", "qux")
-            .setEventProperties(properties.toJsonObject());
+        .setProductId("bar")
+        .setPrice(2)
+        .setQuantity(10)
+        .setReceipt("baz", "qux")
+        .setEventProperties(properties.toJsonObject());
 
     verify(amplitude).logRevenueV2(expectedRevenue);
 
     // third case has price but no revenue
     properties = new Properties()
-            .putValue("productId", "bar")
-            .putValue("quantity", 10)
-            .putValue("price", 2.00)
-            .putValue("receipt", "baz")
-            .putValue("receiptSignature", "qux");
+        .putValue("productId", "bar")
+        .putValue("quantity", 10)
+        .putValue("price", 2.00)
+        .putValue("receipt", "baz")
+        .putValue("receiptSignature", "qux");
     trackPayload = new TrackPayloadBuilder().event("foo").properties(properties).build();
     integration.track(trackPayload);
     verify(amplitude)
@@ -628,9 +628,9 @@ public class AmplitudeTest {
     integration.groupValueTrait = "companyType";
 
     GroupPayload payload = new GroupPayloadBuilder()
-            .groupId("testGroupId")
-            .groupTraits(new Traits().putValue("company", "Segment").putValue("companyType", "data"))
-            .build();
+        .groupId("testGroupId")
+        .groupTraits(new Traits().putValue("company", "Segment").putValue("companyType", "data"))
+        .build();
 
     integration.group(payload);
 
