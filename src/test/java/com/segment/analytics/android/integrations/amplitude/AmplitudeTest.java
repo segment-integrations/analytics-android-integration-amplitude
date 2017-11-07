@@ -298,7 +298,7 @@ public class AmplitudeTest {
 
     ArgumentCaptor<Revenue> firstArgument = ArgumentCaptor.forClass(Revenue.class);
     verify(amplitude).logRevenueV2(firstArgument.capture());
-    assertThat(expectedRevenue.equals(firstArgument));
+    assertThat(expectedRevenue).isEqualToComparingFieldByFieldRecursively(firstArgument.getValue());
 
     Mockito.reset(amplitude);
 
@@ -323,7 +323,7 @@ public class AmplitudeTest {
 
     ArgumentCaptor<Revenue> secondArgument = ArgumentCaptor.forClass(Revenue.class);
     verify(amplitude).logRevenueV2(secondArgument.capture());
-    assertThat(expectedRevenue.equals(secondArgument));
+    assertThat(expectedRevenue).isEqualToComparingFieldByFieldRecursively(secondArgument.getValue());
 
     // third case has price but no revenue
     properties = new Properties().putValue("productId", "bar")
@@ -363,7 +363,7 @@ public class AmplitudeTest {
 
     ArgumentCaptor<Revenue> firstArgument = ArgumentCaptor.forClass(Revenue.class);
     verify(amplitude).logRevenueV2(firstArgument.capture());
-    assertThat(expectedRevenue.equals(firstArgument));
+    assertThat(expectedRevenue).isEqualToComparingFieldByFieldRecursively(firstArgument.getValue());
 
     Mockito.reset(amplitude);
 
@@ -388,7 +388,7 @@ public class AmplitudeTest {
 
     ArgumentCaptor<Revenue> secondArgument = ArgumentCaptor.forClass(Revenue.class);
     verify(amplitude).logRevenueV2(secondArgument.capture());
-    assertThat(expectedRevenue.equals(secondArgument));
+    assertThat(expectedRevenue).isEqualToComparingFieldByFieldRecursively(secondArgument.getValue());
 
     // third case has price but no revenue
     properties = new Properties().putValue("productId", "bar")
@@ -460,34 +460,72 @@ public class AmplitudeTest {
 
   @Test
   public void identifyWithIncrementedTraits() {
-    ValueMap settings = new ValueMap().putValue("traitsToIncrement", Arrays.asList("numberOfVisits"));
+    ValueMap settings = new ValueMap().putValue("traitsToIncrement", Arrays.asList("double", "float", "integer", "long", "string"));
     integration.traitsToIncrement = integration.getStringSet(settings, "traitsToIncrement");
-    Traits traits = createTraits("foo").putValue("numberOfVisits", 100);
+
+    double d = 100.0;
+    float f = 100.0f;
+    int i = 100;
+    long l = 1000L;
+    String s = "random string";
+
+    Traits traits = createTraits("foo")
+        .putValue("anonymousId", "anonId")
+        .putValue("double", d)
+        .putValue("float", f)
+        .putValue("integer", i)
+        .putValue("long", l)
+        .putValue("string", s);
     IdentifyPayload payload = new IdentifyPayloadBuilder().traits(traits).build();
     integration.identify(payload);
 
     Identify identify = new Identify();
-    identify.add("numberOfVisits", 100);
+    identify.set("anonymousId", "anonId");
+    identify.set("userId", "foo");
+    identify.add("double", d);
+    identify.add("float", f);
+    identify.add("integer", i);
+    identify.add("long", l);
+    identify.add("string", s);
 
     ArgumentCaptor<Identify> identifyObject = ArgumentCaptor.forClass(Identify.class);
     verify(amplitude).identify(identifyObject.capture());
-    assertThat(identify.equals(identifyObject));
+    assertThat(identify).isEqualToComparingFieldByFieldRecursively(identifyObject.getValue());
   }
 
   @Test
   public void identifyWithSetOnce() {
-    ValueMap settings = new ValueMap().putValue("traitsToSetOnce", Arrays.asList("age"));
+    ValueMap settings = new ValueMap().putValue("traitsToSetOnce", Arrays.asList("double", "float", "integer", "long", "string"));
     integration.traitsToSetOnce = integration.getStringSet(settings, "traitsToSetOnce");
-    Traits traits = createTraits("foo").putValue("age", 120);
+
+    double d = 100.0;
+    float f = 100.0f;
+    int i = 100;
+    long l = 1000L;
+    String s = "random string";
+
+    Traits traits = createTraits("foo")
+        .putValue("anonymousId", "anonId")
+        .putValue("double", d)
+        .putValue("float", f)
+        .putValue("integer", i)
+        .putValue("long", l)
+        .putValue("string", s);
     IdentifyPayload payload = new IdentifyPayloadBuilder().traits(traits).build();
     integration.identify(payload);
 
     Identify identify = new Identify();
-    identify.add("numberOfVisits", 120);
+    identify.set("anonymousId", "anonId");
+    identify.set("userId", "foo");
+    identify.setOnce("double", d);
+    identify.setOnce("float", f);
+    identify.setOnce("integer", i);
+    identify.setOnce("long", l);
+    identify.setOnce("string", s);
 
     ArgumentCaptor<Identify> identifyObject = ArgumentCaptor.forClass(Identify.class);
     verify(amplitude).identify(identifyObject.capture());
-    assertThat(identify.equals(identifyObject));
+    assertThat(identify).isEqualToComparingFieldByFieldRecursively(identifyObject.getValue());
   }
 
   @Test
