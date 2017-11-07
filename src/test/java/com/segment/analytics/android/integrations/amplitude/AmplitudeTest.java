@@ -244,7 +244,8 @@ public class AmplitudeTest {
 
   @Test
   public void trackWithRevenue() {
-    Properties properties = new Properties().putRevenue(20)
+    Properties properties = new Properties()
+        .putRevenue(20)
         .putValue("productId", "bar")
         .putValue("quantity", 10)
         .putValue("receipt", "baz")
@@ -260,11 +261,12 @@ public class AmplitudeTest {
 
   @Test
   public void trackWithTotal() {
-    Properties properties = new Properties().putTotal(15)
-            .putValue("productId", "bar")
-            .putValue("quantity", 10)
-            .putValue("receipt", "baz")
-            .putValue("receiptSignature", "qux");
+    Properties properties = new Properties()
+        .putTotal(15)
+        .putValue("productId", "bar")
+        .putValue("quantity", 10)
+        .putValue("receipt", "baz")
+        .putValue("receiptSignature", "qux");
     TrackPayload trackPayload =
             new TrackPayloadBuilder().event("foo").properties(properties).build();
 
@@ -278,7 +280,8 @@ public class AmplitudeTest {
   public void trackWithRevenueV2() {
     integration.useLogRevenueV2 = true;
     // first case missing prices field
-    Properties properties = new Properties().putRevenue(20)
+    Properties properties = new Properties()
+        .putRevenue(20)
         .putValue("productId", "bar")
         .putValue("quantity", 10)
         .putValue("receipt", "baz")
@@ -290,20 +293,20 @@ public class AmplitudeTest {
     verify(amplitude)
         .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
-    Revenue expectedRevenue = new Revenue().setProductId("bar")
+    Revenue expectedRevenue = new Revenue()
+        .setProductId("bar")
         .setPrice(20)
         .setQuantity(1)
         .setReceipt("baz", "qux")
         .setEventProperties(properties.toJsonObject());
 
-    ArgumentCaptor<Revenue> firstArgument = ArgumentCaptor.forClass(Revenue.class);
-    verify(amplitude).logRevenueV2(firstArgument.capture());
-    assertThat(expectedRevenue.equals(firstArgument));
+    verify(amplitude).logRevenueV2(expectedRevenue);
 
     Mockito.reset(amplitude);
 
     // second case has price and quantity
-    properties = new Properties().putRevenue(20)
+    properties = new Properties()
+        .putRevenue(20)
         .putValue("productId", "bar")
         .putValue("quantity", 10)
         .putValue("price", 2.00)
@@ -321,12 +324,11 @@ public class AmplitudeTest {
         .setReceipt("baz", "qux")
         .setEventProperties(properties.toJsonObject());
 
-    ArgumentCaptor<Revenue> secondArgument = ArgumentCaptor.forClass(Revenue.class);
-    verify(amplitude).logRevenueV2(secondArgument.capture());
-    assertThat(expectedRevenue.equals(secondArgument));
+    verify(amplitude).logRevenueV2(expectedRevenue);
 
     // third case has price but no revenue
-    properties = new Properties().putValue("productId", "bar")
+    properties = new Properties()
+        .putValue("productId", "bar")
         .putValue("quantity", 10)
         .putValue("price", 2.00)
         .putValue("receipt", "baz")
@@ -343,11 +345,12 @@ public class AmplitudeTest {
   public void trackWithTotalV2() {
     integration.useLogRevenueV2 = true;
     // first case missing prices field
-    Properties properties = new Properties().putTotal(20)
-            .putValue("productId", "bar")
-            .putValue("quantity", 10)
-            .putValue("receipt", "baz")
-            .putValue("receiptSignature", "qux");
+    Properties properties = new Properties()
+        .putTotal(20)
+        .putValue("productId", "bar")
+        .putValue("quantity", 10)
+        .putValue("receipt", "baz")
+        .putValue("receiptSignature", "qux");
     TrackPayload trackPayload =
             new TrackPayloadBuilder().event("foo").properties(properties).build();
 
@@ -355,47 +358,47 @@ public class AmplitudeTest {
     verify(amplitude)
             .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
-    Revenue expectedRevenue = new Revenue().setProductId("bar")
-            .setPrice(20)
-            .setQuantity(1)
-            .setReceipt("baz", "qux")
-            .setEventProperties(properties.toJsonObject());
+    Revenue expectedRevenue = new Revenue()
+        .setProductId("bar")
+        .setPrice(20)
+        .setQuantity(1)
+        .setReceipt("baz", "qux")
+        .setEventProperties(properties.toJsonObject());
 
-    ArgumentCaptor<Revenue> firstArgument = ArgumentCaptor.forClass(Revenue.class);
-    verify(amplitude).logRevenueV2(firstArgument.capture());
-    assertThat(expectedRevenue.equals(firstArgument));
+    verify(amplitude).logRevenueV2(expectedRevenue);
 
     Mockito.reset(amplitude);
 
     // second case has price and quantity
-    properties = new Properties().putTotal(20)
-            .putValue("productId", "bar")
-            .putValue("quantity", 10)
-            .putValue("price", 2.00)
-            .putValue("receipt", "baz")
-            .putValue("receiptSignature", "qux");
+    properties = new Properties()
+        .putTotal(20)
+        .putValue("productId", "bar")
+        .putValue("quantity", 10)
+        .putValue("price", 2.00)
+        .putValue("receipt", "baz")
+        .putValue("receiptSignature", "qux");
     trackPayload = new TrackPayloadBuilder().event("foo").properties(properties).build();
 
     integration.track(trackPayload);
     verify(amplitude)
             .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
-    expectedRevenue = new Revenue().setProductId("bar")
-            .setPrice(2)
-            .setQuantity(10)
-            .setReceipt("baz", "qux")
-            .setEventProperties(properties.toJsonObject());
+    expectedRevenue = new Revenue()
+        .setProductId("bar")
+        .setPrice(2)
+        .setQuantity(10)
+        .setReceipt("baz", "qux")
+        .setEventProperties(properties.toJsonObject());
 
-    ArgumentCaptor<Revenue> secondArgument = ArgumentCaptor.forClass(Revenue.class);
-    verify(amplitude).logRevenueV2(secondArgument.capture());
-    assertThat(expectedRevenue.equals(secondArgument));
+    verify(amplitude).logRevenueV2(expectedRevenue);
 
     // third case has price but no revenue
-    properties = new Properties().putValue("productId", "bar")
-            .putValue("quantity", 10)
-            .putValue("price", 2.00)
-            .putValue("receipt", "baz")
-            .putValue("receiptSignature", "qux");
+    properties = new Properties()
+        .putValue("productId", "bar")
+        .putValue("quantity", 10)
+        .putValue("price", 2.00)
+        .putValue("receipt", "baz")
+        .putValue("receiptSignature", "qux");
     trackPayload = new TrackPayloadBuilder().event("foo").properties(properties).build();
     integration.track(trackPayload);
     verify(amplitude)
@@ -460,34 +463,74 @@ public class AmplitudeTest {
 
   @Test
   public void identifyWithIncrementedTraits() {
-    ValueMap settings = new ValueMap().putValue("traitsToIncrement", Arrays.asList("numberOfVisits"));
+    ValueMap settings = new ValueMap()
+        .putValue("traitsToIncrement", Arrays.asList("double", "float", "integer", "long", "string"));
     integration.traitsToIncrement = integration.getStringSet(settings, "traitsToIncrement");
-    Traits traits = createTraits("foo").putValue("numberOfVisits", 100);
+
+    double d = 100.0;
+    float f = 100.0f;
+    int i = 100;
+    long l = 1000L;
+    String s = "random string";
+
+    Traits traits = createTraits("foo")
+        .putValue("anonymousId", "anonId")
+        .putValue("double", d)
+        .putValue("float", f)
+        .putValue("integer", i)
+        .putValue("long", l)
+        .putValue("string", s);
     IdentifyPayload payload = new IdentifyPayloadBuilder().traits(traits).build();
     integration.identify(payload);
 
     Identify identify = new Identify();
-    identify.add("numberOfVisits", 100);
+    identify.set("anonymousId", "anonId");
+    identify.set("userId", "foo");
+    identify.add("double", d);
+    identify.add("float", f);
+    identify.add("integer", i);
+    identify.add("long", l);
+    identify.add("string", s);
 
     ArgumentCaptor<Identify> identifyObject = ArgumentCaptor.forClass(Identify.class);
     verify(amplitude).identify(identifyObject.capture());
-    assertThat(identify.equals(identifyObject));
+    assertThat(identify).isEqualToComparingFieldByFieldRecursively(identifyObject.getValue());
   }
 
   @Test
   public void identifyWithSetOnce() {
-    ValueMap settings = new ValueMap().putValue("traitsToSetOnce", Arrays.asList("age"));
+    ValueMap settings = new ValueMap()
+        .putValue("traitsToSetOnce", Arrays.asList("double", "float", "integer", "long", "string"));
     integration.traitsToSetOnce = integration.getStringSet(settings, "traitsToSetOnce");
-    Traits traits = createTraits("foo").putValue("age", 120);
+
+    double d = 100.0;
+    float f = 100.0f;
+    int i = 100;
+    long l = 1000L;
+    String s = "random string";
+
+    Traits traits = createTraits("foo")
+        .putValue("anonymousId", "anonId")
+        .putValue("double", d)
+        .putValue("float", f)
+        .putValue("integer", i)
+        .putValue("long", l)
+        .putValue("string", s);
     IdentifyPayload payload = new IdentifyPayloadBuilder().traits(traits).build();
     integration.identify(payload);
 
     Identify identify = new Identify();
-    identify.add("numberOfVisits", 120);
+    identify.set("anonymousId", "anonId");
+    identify.set("userId", "foo");
+    identify.setOnce("double", d);
+    identify.setOnce("float", f);
+    identify.setOnce("integer", i);
+    identify.setOnce("long", l);
+    identify.setOnce("string", s);
 
     ArgumentCaptor<Identify> identifyObject = ArgumentCaptor.forClass(Identify.class);
     verify(amplitude).identify(identifyObject.capture());
-    assertThat(identify.equals(identifyObject));
+    assertThat(identify).isEqualToComparingFieldByFieldRecursively(identifyObject.getValue());
   }
 
   @Test
@@ -552,7 +595,8 @@ public class AmplitudeTest {
     Properties properties = new Properties();
     properties.putValue("bar", "baz");
     integration.screen(new ScreenPayloadBuilder().name("foo").properties(properties).build());
-    verifyAmplitudeLoggedEvent("Loaded a Screen", new JSONObject().put("name", "foo").put("bar", "baz"));
+    verifyAmplitudeLoggedEvent("Loaded a Screen", new JSONObject()
+        .put("name", "foo").put("bar", "baz"));
   }
 
   @Test
@@ -584,9 +628,9 @@ public class AmplitudeTest {
     integration.groupValueTrait = "companyType";
 
     GroupPayload payload = new GroupPayloadBuilder()
-            .groupId("testGroupId")
-            .groupTraits(new Traits().putValue("company", "Segment").putValue("companyType", "data"))
-            .build();
+        .groupId("testGroupId")
+        .groupTraits(new Traits().putValue("company", "Segment").putValue("companyType", "data"))
+        .build();
 
     integration.group(payload);
 
