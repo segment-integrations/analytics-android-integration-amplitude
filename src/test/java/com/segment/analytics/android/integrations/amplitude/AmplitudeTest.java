@@ -244,7 +244,8 @@ public class AmplitudeTest {
 
   @Test
   public void trackWithRevenue() {
-    Properties properties = new Properties().putRevenue(20)
+    Properties properties = new Properties()
+        .putRevenue(20)
         .putValue("productId", "bar")
         .putValue("quantity", 10)
         .putValue("receipt", "baz")
@@ -260,11 +261,12 @@ public class AmplitudeTest {
 
   @Test
   public void trackWithTotal() {
-    Properties properties = new Properties().putTotal(15)
-            .putValue("productId", "bar")
-            .putValue("quantity", 10)
-            .putValue("receipt", "baz")
-            .putValue("receiptSignature", "qux");
+    Properties properties = new Properties()
+        .putTotal(15)
+        .putValue("productId", "bar")
+        .putValue("quantity", 10)
+        .putValue("receipt", "baz")
+        .putValue("receiptSignature", "qux");
     TrackPayload trackPayload =
             new TrackPayloadBuilder().event("foo").properties(properties).build();
 
@@ -278,7 +280,8 @@ public class AmplitudeTest {
   public void trackWithRevenueV2() {
     integration.useLogRevenueV2 = true;
     // first case missing prices field
-    Properties properties = new Properties().putRevenue(20)
+    Properties properties = new Properties()
+        .putRevenue(20)
         .putValue("productId", "bar")
         .putValue("quantity", 10)
         .putValue("receipt", "baz")
@@ -290,20 +293,20 @@ public class AmplitudeTest {
     verify(amplitude)
         .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
-    Revenue expectedRevenue = new Revenue().setProductId("bar")
+    Revenue expectedRevenue = new Revenue()
+        .setProductId("bar")
         .setPrice(20)
         .setQuantity(1)
         .setReceipt("baz", "qux")
         .setEventProperties(properties.toJsonObject());
 
-    ArgumentCaptor<Revenue> firstArgument = ArgumentCaptor.forClass(Revenue.class);
-    verify(amplitude).logRevenueV2(firstArgument.capture());
-    assertThat(expectedRevenue).isEqualToComparingFieldByFieldRecursively(firstArgument.getValue());
+    verify(amplitude).logRevenueV2(expectedRevenue);
 
     Mockito.reset(amplitude);
 
     // second case has price and quantity
-    properties = new Properties().putRevenue(20)
+    properties = new Properties()
+        .putRevenue(20)
         .putValue("productId", "bar")
         .putValue("quantity", 10)
         .putValue("price", 2.00)
@@ -321,12 +324,11 @@ public class AmplitudeTest {
         .setReceipt("baz", "qux")
         .setEventProperties(properties.toJsonObject());
 
-    ArgumentCaptor<Revenue> secondArgument = ArgumentCaptor.forClass(Revenue.class);
-    verify(amplitude).logRevenueV2(secondArgument.capture());
-    assertThat(expectedRevenue).isEqualToComparingFieldByFieldRecursively(secondArgument.getValue());
+    verify(amplitude).logRevenueV2(expectedRevenue);
 
     // third case has price but no revenue
-    properties = new Properties().putValue("productId", "bar")
+    properties = new Properties()
+        .putValue("productId", "bar")
         .putValue("quantity", 10)
         .putValue("price", 2.00)
         .putValue("receipt", "baz")
@@ -343,7 +345,8 @@ public class AmplitudeTest {
   public void trackWithTotalV2() {
     integration.useLogRevenueV2 = true;
     // first case missing prices field
-    Properties properties = new Properties().putTotal(20)
+    Properties properties = new Properties()
+            .putTotal(20)
             .putValue("productId", "bar")
             .putValue("quantity", 10)
             .putValue("receipt", "baz")
@@ -355,20 +358,20 @@ public class AmplitudeTest {
     verify(amplitude)
             .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
-    Revenue expectedRevenue = new Revenue().setProductId("bar")
+    Revenue expectedRevenue = new Revenue()
+            .setProductId("bar")
             .setPrice(20)
             .setQuantity(1)
             .setReceipt("baz", "qux")
             .setEventProperties(properties.toJsonObject());
 
-    ArgumentCaptor<Revenue> firstArgument = ArgumentCaptor.forClass(Revenue.class);
-    verify(amplitude).logRevenueV2(firstArgument.capture());
-    assertThat(expectedRevenue).isEqualToComparingFieldByFieldRecursively(firstArgument.getValue());
+    verify(amplitude).logRevenueV2(expectedRevenue);
 
     Mockito.reset(amplitude);
 
     // second case has price and quantity
-    properties = new Properties().putTotal(20)
+    properties = new Properties()
+            .putTotal(20)
             .putValue("productId", "bar")
             .putValue("quantity", 10)
             .putValue("price", 2.00)
@@ -380,18 +383,18 @@ public class AmplitudeTest {
     verify(amplitude)
             .logEvent(eq("foo"), jsonEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
-    expectedRevenue = new Revenue().setProductId("bar")
+    expectedRevenue = new Revenue()
+            .setProductId("bar")
             .setPrice(2)
             .setQuantity(10)
             .setReceipt("baz", "qux")
             .setEventProperties(properties.toJsonObject());
 
-    ArgumentCaptor<Revenue> secondArgument = ArgumentCaptor.forClass(Revenue.class);
-    verify(amplitude).logRevenueV2(secondArgument.capture());
-    assertThat(expectedRevenue).isEqualToComparingFieldByFieldRecursively(secondArgument.getValue());
+    verify(amplitude).logRevenueV2(expectedRevenue);
 
     // third case has price but no revenue
-    properties = new Properties().putValue("productId", "bar")
+    properties = new Properties()
+            .putValue("productId", "bar")
             .putValue("quantity", 10)
             .putValue("price", 2.00)
             .putValue("receipt", "baz")
