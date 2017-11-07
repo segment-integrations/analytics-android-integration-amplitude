@@ -460,7 +460,8 @@ public class AmplitudeTest {
 
   @Test
   public void identifyWithIncrementedTraits() {
-    ValueMap settings = new ValueMap().putValue("traitsToIncrement", Arrays.asList("double", "float", "integer", "long", "string"));
+    ValueMap settings = new ValueMap()
+        .putValue("traitsToIncrement", Arrays.asList("double", "float", "integer", "long", "string"));
     integration.traitsToIncrement = integration.getStringSet(settings, "traitsToIncrement");
 
     double d = 100.0;
@@ -495,7 +496,8 @@ public class AmplitudeTest {
 
   @Test
   public void identifyWithSetOnce() {
-    ValueMap settings = new ValueMap().putValue("traitsToSetOnce", Arrays.asList("double", "float", "integer", "long", "string"));
+    ValueMap settings = new ValueMap()
+        .putValue("traitsToSetOnce", Arrays.asList("double", "float", "integer", "long", "string"));
     integration.traitsToSetOnce = integration.getStringSet(settings, "traitsToSetOnce");
 
     double d = 100.0;
@@ -590,7 +592,8 @@ public class AmplitudeTest {
     Properties properties = new Properties();
     properties.putValue("bar", "baz");
     integration.screen(new ScreenPayloadBuilder().name("foo").properties(properties).build());
-    verifyAmplitudeLoggedEvent("Loaded a Screen", new JSONObject().put("name", "foo").put("bar", "baz"));
+    verifyAmplitudeLoggedEvent("Loaded a Screen", new JSONObject()
+        .put("name", "foo").put("bar", "baz"));
   }
 
   @Test
