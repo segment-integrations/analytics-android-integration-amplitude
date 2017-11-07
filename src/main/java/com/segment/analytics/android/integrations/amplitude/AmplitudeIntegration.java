@@ -119,7 +119,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     }
   }
 
-  public static Set<String> getStringSet(ValueMap valueMap, String key) {
+  static Set<String> getStringSet(ValueMap valueMap, String key) {
     try {
       //noinspection unchecked
       List<Object> incrementTraits = (List<Object>) valueMap.get(key);
