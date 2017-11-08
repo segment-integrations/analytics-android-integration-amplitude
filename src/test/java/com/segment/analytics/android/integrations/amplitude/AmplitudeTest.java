@@ -22,6 +22,7 @@ import com.segment.analytics.test.IdentifyPayloadBuilder;
 import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
 
+import org.assertj.core.matcher.AssertionMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.json.JSONArray;
@@ -41,7 +42,6 @@ import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
 import static com.segment.analytics.Utils.createTraits;
 import static com.segment.analytics.android.integrations.amplitude.AmplitudeIntegration.getStringSet;
 import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNull;
@@ -330,9 +330,8 @@ public class AmplitudeTest {
             .setReceipt("baz", "qux")
             .setEventProperties(properties.toJsonObject());
 
-    verify(amplitude).logRevenueV2(argThat(samePropertyValuesAs(expectedRevenue)));
+    verify(amplitude).logRevenueV2(expectedRevenue);
   }
-
   @Test
   public void trackWithTotalV2() {
     integration.useLogRevenueV2 = true;
@@ -384,7 +383,7 @@ public class AmplitudeTest {
             .setReceipt("baz", "qux")
             .setEventProperties(properties.toJsonObject());
 
-    verify(amplitude).logRevenueV2(argThat(samePropertyValuesAs(expectedRevenue)));
+    verify(amplitude).logRevenueV2(expectedRevenue);
   }
 
   @Test
@@ -411,7 +410,7 @@ public class AmplitudeTest {
             .setReceipt("baz", "qux")
             .setEventProperties(properties.toJsonObject());
 
-    verify(amplitude).logRevenueV2(argThat(samePropertyValuesAs(expectedRevenue)));
+    verify(amplitude).logRevenueV2(expectedRevenue);
   }
 
   @Test
@@ -499,7 +498,7 @@ public class AmplitudeTest {
     expectedIdentify.add("long", l);
     expectedIdentify.add("string", s);
 
-    verify(amplitude).identify(argThat(samePropertyValuesAs(expectedIdentify)));
+    verify(amplitude).identify(isEqualToComparingFieldByFieldRecursively(expectedIdentify));
   }
 
   @Test
@@ -533,7 +532,7 @@ public class AmplitudeTest {
     identify.setOnce("long", l);
     identify.setOnce("string", s);
 
-    verify(amplitude).identify(argThat(samePropertyValuesAs(identify)));
+    verify(amplitude).identify(isEqualToComparingFieldByFieldRecursively(identify));
   }
 
   @Test
@@ -724,7 +723,17 @@ public class AmplitudeTest {
     verify(amplitude).logEvent(eq(event), jsonEq(jsonObject), isNull(JSONObject.class), eq(false));
   }
 
-  public static JSONObject jsonEq(JSONObject expected) {
+
+  private static <T> T isEqualToComparingFieldByFieldRecursively(final T expected) {
+    return argThat(new AssertionMatcher<T>(){
+      @Override
+      public void assertion(T actual) throws AssertionError {
+        assertThat(actual).isEqualToComparingFieldByFieldRecursively(expected);
+      }
+    });
+  }
+
+  private static JSONObject jsonEq(JSONObject expected) {
     return argThat(new JSONObjectMatcher(expected));
   }
 
