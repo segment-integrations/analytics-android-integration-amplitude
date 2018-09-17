@@ -1,0 +1,52 @@
+version: 2
+jobs:
+  build:
+    resource_class: small
+    docker:
+      - image: circleci/android:api-25-alpha
+        environment:
+          ANDROID_HOME: /home/circleci/android
+          CIRCLE_JDK_VERSION: oraclejdk8
+    steps:
+      - checkout
+      - run:
+          name: Create folders
+          command: mkdir -p /home/circleci/android/licenses
+      - restore_cache:
+          key: dependencies-{{ .Branch }}-{{ checksum "build.gradle" }}
+      - run:
+          name: Accept licenses
+          command: cp /opt/android/sdk/licenses/* $ANDROID_HOME/licenses
+      - run:
+          name: Install dependencies
+          command: ./gradlew dependencies
+      - run:
+          name: Run tests
+          command: ./gradlew checkRelease testRelease --profile
+      - save_cache:
+          key: dependencies-{{ .Branch }}-{{ checksum "build.gradle" }}
+          paths:
+            - /home/circleci/.android
+            - /home/circleci/android
+            - /home/circleci/.gradle
+            - /usr/local/android-sdk-linux/platforms/android-25
+            - /usr/local/android-sdk-linux/build-tools/25.0.0
+            - /usr/local/android-sdk-linux/extras/android/m2repository
+      - store_artifacts:
+          path: analytics-core/build/test-report
+          destination: reports
+      - store_artifacts:
+          path: analytics-integrations/*/build/test-report
+          destination: reports
+      - store_artifacts:
+          path: build/reports/profile
+          destination: reports
+
+workflows:
+  version: 2
+  run:
+    jobs:
+      - build:
+          filters:  
+            tags: 
+              only: /.*/
