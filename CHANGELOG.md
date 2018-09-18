@@ -1,3 +1,20 @@
+
+2.0.1 / 2018-09-18
+==================
+
+  * Add tag verification
+  * Persist the workspace
+  * Remove old configuration
+  * Add publish steps
+  * Add CircleCI 2.0 base config
+  * Update Tests (#43)
+  * Remove checkstyle.xml (#42)
+  * Adjust test formatting
+  * Simplify tests for revenue and total
+  * Minimal formatting changes
+  * Update tests to use isEqualToComparingFieldByFieldRecursively
+  * Prepare next development version.
+
 Version 2.0.0 (November 1, 2017)
 ================================
 *(Supports analytics-android 4.0.+ and Amplitude 2.15.+)*
