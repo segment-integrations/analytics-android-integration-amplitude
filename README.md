@@ -34,6 +34,10 @@ analytics = new Analytics.Builder(this, "write_key")
 
 Please see [our documentation](https://segment.com/docs/integrations/amplitude/) for more information.
 
+## Repository
+- [Snapshots](https://oss.sonatype.org/content/repositories/snapshots/com/segment/analytics/android/integrations/amplitude/)
+- [Releases](https://oss.sonatype.org/content/repositories/releases/com/segment/analytics/android/integrations/amplitude/)
+
 ## License
 
 ```
