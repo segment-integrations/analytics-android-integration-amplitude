@@ -18,28 +18,30 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 apply plugin: 'io.codearte.nexus-staging'
 
-def isReleaseBuild() {
-  return getVersion().contains("SNAPSHOT") == false
+/**
+ * Use -Psnapshot to enable SNAPSHOT version
+ * @return <code>true</code> if it's a snapshot build. <code>false</code> otherwise.
+ */
+def isSnapshotBuild() {
+  return hasProperty('snapshot')
 }
 
 def getRepositoryUsername() {
-  return hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : ""
+  if (!hasProperty('NEXUS_USERNAME')) {
+     throw new InvalidUserDataException("Nexus username is not set")
+  }
+  return NEXUS_USERNAME
 }
 
 def getRepositoryPassword() {
-  return hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : ""
+  if (!hasProperty('NEXUS_PASSWORD')) {
+    throw new InvalidUserDataException("Nexus password is not set")
+  }
+  return NEXUS_PASSWORD
 }
 
-/**
- * Use -Psnapshot to enable SNAPSHOT version
- *
- * @return Version name
- */
 def getVersion() {
-  if (hasProperty('snapshot')) {
-    return VERSION_NAME + "-SNAPSHOT"
-  }
-  return VERSION_NAME
+  return isSnapshotBuild() ? VERSION_NAME + "-SNAPSHOT": VERSION_NAME
 }
 
 afterEvaluate { project ->
@@ -91,7 +93,7 @@ afterEvaluate { project ->
   }
 
   signing {
-    required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
+    required { !isSnapshotBuild() && gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives
   }
 

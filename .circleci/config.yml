@@ -59,12 +59,7 @@ jobs:
                 key: dependencies-{{ .Branch }}-{{ checksum "build.gradle" }}
       - run:
           name: Publish SNAPSHOT
-          command: |
-              if [ "$ORG_GRADLE_PROJECT_NEXUS_USERNAME" == "" -o "$ORG_GRADLE_PROJECT_NEXUS_PASSWORD" == "" ]; then {
-                  echo "Nexus username and password must be set"
-                  exit 1
-              } fi
-              ./gradlew uploadArchives -Psnapshot
+          command: ./gradlew uploadArchives -Psnapshot
 
   publish:
       resource_class: small
@@ -88,12 +83,7 @@ jobs:
                 } fi
         - run:
             name: Publish new version
-            command: |
-                if [ "$ORG_GRADLE_PROJECT_NEXUS_USERNAME" == "" -o "$ORG_GRADLE_PROJECT_NEXUS_PASSWORD" == "" ]; then {
-                    echo "Nexus username and password must be set"
-                    exit 1
-                } fi
-                ./gradlew uploadArchives
+            command: ./gradlew uploadArchives
         - run:
             name: Mark release
             command: ./gradlew closeAndReleaseRepository
