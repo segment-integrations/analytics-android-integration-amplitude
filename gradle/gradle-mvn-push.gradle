@@ -128,5 +128,5 @@ afterEvaluate { project ->
 }
 
 nexusStaging {
-  packageGroup = "com.segment"
+  stagingProfileId = "com.segment"
 }
