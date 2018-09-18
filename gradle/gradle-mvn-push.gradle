@@ -29,6 +29,18 @@ def getRepositoryPassword() {
   return hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : ""
 }
 
+/**
+ * Use -Psnapshot to enable SNAPSHOT version
+ *
+ * @return Version name
+ */
+def getVersion() {
+  if (hasProperty('snapshot')) {
+    return VERSION_NAME + "-SNAPSHOT"
+  }
+  return VERSION_NAME
+}
+
 afterEvaluate { project ->
   uploadArchives {
     repositories {
@@ -37,7 +49,7 @@ afterEvaluate { project ->
 
         pom.groupId = GROUP
         pom.artifactId = POM_ARTIFACT_ID
-        pom.version = VERSION_NAME
+        pom.version = getVersion()
 
         repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
           authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
