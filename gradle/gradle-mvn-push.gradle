@@ -128,5 +128,6 @@ afterEvaluate { project ->
 }
 
 nexusStaging {
+  packageGroup = "com.segment.analytics.android.integrations"
   stagingProfileId = "73905a9e454559"
 }

@@ -1,4 +1,10 @@
 
+2.0.2-beta / 2018-09-18
+=======================
+
+  * Update README with links to the repos
+  * Add publish plugin (#48)
+
 2.0.1 / 2018-09-18
 ==================
 
