@@ -128,5 +128,5 @@ afterEvaluate { project ->
 }
 
 nexusStaging {
-  stagingProfileId = "com.segment"
+  stagingProfileId = "73905a9e454559"
 }
