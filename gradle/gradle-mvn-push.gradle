@@ -16,29 +16,32 @@
 
 apply plugin: 'maven'
 apply plugin: 'signing'
-
-def isReleaseBuild() {
-  return getVersion().contains("SNAPSHOT") == false
-}
-
-def getRepositoryUsername() {
-  return hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : ""
-}
-
-def getRepositoryPassword() {
-  return hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : ""
-}
+apply plugin: 'io.codearte.nexus-staging'
 
 /**
  * Use -Psnapshot to enable SNAPSHOT version
- *
- * @return Version name
+ * @return <code>true</code> if it's a snapshot build. <code>false</code> otherwise.
  */
-def getVersion() {
-  if (hasProperty('snapshot')) {
-    return VERSION_NAME + "-SNAPSHOT"
+def isSnapshotBuild() {
+  return hasProperty('snapshot')
+}
+
+def getRepositoryUsername() {
+  if (!hasProperty('NEXUS_USERNAME')) {
+     throw new InvalidUserDataException("Nexus username is not set")
   }
-  return VERSION_NAME
+  return NEXUS_USERNAME
+}
+
+def getRepositoryPassword() {
+  if (!hasProperty('NEXUS_PASSWORD')) {
+    throw new InvalidUserDataException("Nexus password is not set")
+  }
+  return NEXUS_PASSWORD
+}
+
+def getVersion() {
+  return isSnapshotBuild() ? VERSION_NAME + "-SNAPSHOT": VERSION_NAME
 }
 
 afterEvaluate { project ->
@@ -90,7 +93,7 @@ afterEvaluate { project ->
   }
 
   signing {
-    required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
+    required { !isSnapshotBuild() && gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives
   }
 
@@ -122,4 +125,8 @@ afterEvaluate { project ->
     archives androidSourcesJar
     archives androidJavadocsJar
   }
+}
+
+nexusStaging {
+  stagingProfileId = "73905a9e454559"
 }
