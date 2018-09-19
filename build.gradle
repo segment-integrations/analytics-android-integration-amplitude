@@ -10,6 +10,9 @@ buildscript {
     }
 }
 
+// Use -Prelease or $ORG_GRADLE_PROJECT_RELEASE="true" to mark the project as a release
+ext.isRelease = hasProperty('release')
+
 apply plugin: 'com.android.library'
 apply plugin: 'com.f2prateek.javafmt'
 
@@ -51,4 +54,6 @@ dependencies {
 }
 
 apply from: rootProject.file('gradle/attach-jar.gradle')
-apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+apply from: rootProject.file('gradle/upload.gradle')
+apply from: rootProject.file('gradle/sign.gradle')
+apply from: rootProject.file('gradle/promote.gradle')

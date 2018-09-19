@@ -58,8 +58,17 @@ jobs:
       - restore_cache:
                 key: dependencies-{{ .Branch }}-{{ checksum "build.gradle" }}
       - run:
+          name: Set up signature
+          command: |
+              if [ "$SIGNATURE_SECRET" == "" ]; then {
+                  echo "Invalid signature configuration"
+                  exit 1
+              } fi
+              base64 -d - <<< "$SIGNATURE_SECRET" > $SIGNATURE_SECRET_FILE
+              gpg --batch --yes --import $SIGNATURE_SECRET_FILE <<< $SIGNATURE_PASSWORD
+      - run:
           name: Publish SNAPSHOT
-          command: ./gradlew uploadArchives -Psnapshot
+          command: ./gradlew uploadArchives
 
   publish:
       resource_class: small
@@ -74,16 +83,25 @@ jobs:
         - restore_cache:
                   key: dependencies-{{ .Branch }}-{{ checksum "build.gradle" }}
         - run:
+            name: Set up signature
+            command: |
+                if [ "$SIGNATURE_SECRET" == "" ]; then {
+                    echo "Invalid signature configuration"
+                    exit 1
+                } fi
+                base64 -d - <<< "$SIGNATURE_SECRET" > $SIGNATURE_SECRET_FILE
+                gpg --batch --yes --import $SIGNATURE_SECRET_FILE <<< $SIGNATURE_PASSWORD
+        - run:
             name: Verify tag
             command: |
-                VERSION=$(grep VERSION_NAME gradle.properties | awk -F= '{ print $2 }')
+                VERSION=$(grep VERSION gradle.properties | awk -F= '{ print $2 }' | awk -F- '{ print $1 }')
                 if [ "$CIRCLE_TAG" != "$VERSION" ]; then {
                     echo "Tag $CIRCLE_TAG does not match the package version ($VERSION)"
                     exit 1
                 } fi
         - run:
             name: Publish new version
-            command: ./gradlew uploadArchives
+            command: ./gradlew uploadArchives -Prelease
         - run:
             name: Mark release
             command: ./gradlew closeAndReleaseRepository
@@ -94,10 +112,12 @@ workflows:
   run:
     jobs:
       - build:
+          context: Android
           filters:  
             tags: 
               only: /.*/
       - publish_snapshot:
+          context: Android
           requires: [ build ]
           filters:
             branches:
@@ -105,6 +125,7 @@ workflows:
             tags:
               only: /.*/
       - publish:
+          context: Android
           requires: [ build ]
           filters:
             branches:

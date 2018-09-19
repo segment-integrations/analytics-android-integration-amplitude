@@ -38,6 +38,23 @@ Please see [our documentation](https://segment.com/docs/integrations/amplitude/)
 - [Snapshots](https://oss.sonatype.org/content/repositories/snapshots/com/segment/analytics/android/integrations/amplitude/)
 - [Releases](https://oss.sonatype.org/content/repositories/releases/com/segment/analytics/android/integrations/amplitude/)
 
+## Releasing
+CircleCI is configured to release the artifacts when a new tag is created. Snapshot builds are created and uploaded
+for each commit in master.
+
+When you are working in a new release, change the version to `<new-version>-SNAPSHOT` in `gradle.properties`. After you
+are done, push your changes to master (it will upload the SNAPSHOT version) and then create a tag with the version (it
+will release and promote the new version).
+
+### Errors promoting
+Go to [Sonatype](https://oss.sonatype.org/#stagingRepositories) to check if the previous staging was not closed
+properly, or if the signature was invalid. Segment's staging repositories are `comsegment-xxxxx`.
+
+### Verify signature
+You can get Segment's public key from:
+- [GnuPG](http://keys.gnupg.net:11371/pks/lookup?search=tools%2Bandroid%40segment.com&fingerprint=on&op=index)
+- [PGP MIT](http://pgp.mit.edu/pks/lookup?search=tools%2Bandroid%40segment.com&op=index)
+
 ## License
 
 ```
