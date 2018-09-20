@@ -25,7 +25,7 @@ afterEvaluate { project ->
         def userName = System.getenv("NEXUS_USERNAME")
         def password = System.getenv("NEXUS_PASSWORD")
 
-        if ( userName.isEmpty() || password.isEmpty() ) {
+        if ( userName == null || userName.isEmpty() || password == null || password.isEmpty() ) {
           throw new InvalidUserDataException('Nexus credentials are not set')
         }
 
