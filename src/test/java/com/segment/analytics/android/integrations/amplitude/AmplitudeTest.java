@@ -122,7 +122,7 @@ public class AmplitudeTest {
             .build());
 
     verify(amplitude)
-        .logEvent(eq("foo"), toStringEq(new JSONObject()), isNull(), eq(false));
+        .logEvent(eq("foo"), toStringEq(new JSONObject()), isNull(JSONObject.class), eq(false));
     verifyNoMoreInteractions(amplitude);
   }
 
@@ -172,7 +172,7 @@ public class AmplitudeTest {
             .build());
 
     verify(amplitude)
-            .logEvent(eq("foo"), toStringEq(new JSONObject()), isNull(), eq(true));
+            .logEvent(eq("foo"), toStringEq(new JSONObject()), isNull(JSONObject.class), eq(true));
   }
 
   @Test
@@ -184,7 +184,7 @@ public class AmplitudeTest {
             .build());
 
     verify(amplitude)
-            .logEvent(eq("foo"), toStringEq(new JSONObject()), isNull(), eq(false));
+            .logEvent(eq("foo"), toStringEq(new JSONObject()), isNull(JSONObject.class), eq(false));
   }
 
   @Test
@@ -198,7 +198,7 @@ public class AmplitudeTest {
             .build());
 
     verify(amplitude)
-            .logEvent(eq("foo"), toStringEq(new JSONObject()), isNull(), eq(false));
+            .logEvent(eq("foo"), toStringEq(new JSONObject()), isNull(JSONObject.class), eq(false));
   }
 
   @Test
@@ -213,7 +213,7 @@ public class AmplitudeTest {
             .build());
 
     verify(amplitude)
-            .logEvent(eq("foo"), toStringEq(new JSONObject()), isNull(), eq(false));
+            .logEvent(eq("foo"), toStringEq(new JSONObject()), isNull(JSONObject.class), eq(false));
   }
 
   @SuppressWarnings("deprecation")
@@ -264,7 +264,7 @@ public class AmplitudeTest {
     integration.track((new TrackPayload.Builder()).anonymousId("anonId").event("foo").properties(properties).build());
 
     verify(amplitude)
-        .logEvent(eq("foo"), toStringEq(properties.toJsonObject()), isNull(), eq(false));
+        .logEvent(eq("foo"), toStringEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     Revenue expectedRevenue = new Revenue()
         .setProductId("bar")
@@ -288,7 +288,7 @@ public class AmplitudeTest {
     integration.track((new TrackPayload.Builder()).anonymousId("anonId").event("foo").properties(properties).build());
 
     verify(amplitude)
-            .logEvent(eq("foo"), toStringEq(properties.toJsonObject()), isNull(), eq(false));
+            .logEvent(eq("foo"), toStringEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     verifyNoMoreInteractions(amplitude);
   }
@@ -306,7 +306,7 @@ public class AmplitudeTest {
 
     integration.track((new TrackPayload.Builder()).anonymousId("anonId").event("foo").properties(properties).build());
     verify(amplitude)
-            .logEvent(eq("foo"), toStringEq(properties.toJsonObject()), isNull(), eq(false));
+            .logEvent(eq("foo"), toStringEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     Revenue expectedRevenue = new Revenue().setProductId("bar")
             .setPrice(2)
@@ -332,7 +332,7 @@ public class AmplitudeTest {
 
     integration.track(trackPayload);
     verify(amplitude)
-            .logEvent(eq("foo"), toStringEq(properties.toJsonObject()), isNull(), eq(false));
+            .logEvent(eq("foo"), toStringEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     Revenue expectedRevenue = new Revenue()
         .setProductId("bar")
@@ -359,7 +359,7 @@ public class AmplitudeTest {
     integration.track((new TrackPayload.Builder()).anonymousId("anonId").event("foo").properties(properties).build());
 
     verify(amplitude)
-            .logEvent(eq("foo"), toStringEq(properties.toJsonObject()), isNull(), eq(false));
+            .logEvent(eq("foo"), toStringEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     Revenue expectedRevenue = new Revenue()
             .setProductId("bar")
@@ -386,7 +386,7 @@ public class AmplitudeTest {
     integration.track((new TrackPayload.Builder()).anonymousId("anonId").event("foo").properties(properties).build());
 
     verify(amplitude)
-            .logEvent(eq("foo"), toStringEq(properties.toJsonObject()), isNull(), eq(false));
+            .logEvent(eq("foo"), toStringEq(properties.toJsonObject()), isNull(JSONObject.class), eq(false));
 
     Revenue expectedRevenue = new Revenue()
             .setProductId("bar")
@@ -707,7 +707,7 @@ public class AmplitudeTest {
   }
 
   private void verifyAmplitudeLoggedEvent(String event, JSONObject jsonObject) {
-    verify(amplitude).logEvent(eq(event), toStringEq(jsonObject), isNull(), eq(false));
+    verify(amplitude).logEvent(eq(event), toStringEq(jsonObject), isNull(JSONObject.class), eq(false));
   }
 
   /**
