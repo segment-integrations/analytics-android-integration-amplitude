@@ -25,10 +25,6 @@ afterEvaluate { project ->
         def userName = System.getenv("NEXUS_USERNAME")
         def password = System.getenv("NEXUS_PASSWORD")
 
-        if ( userName.isEmpty() || password.isEmpty() ) {
-          throw new InvalidUserDataException('Nexus credentials are not set')
-        }
-
         pom.groupId = GROUP
         pom.artifactId = POM_ARTIFACT_ID
         pom.version = isRelease ? VERSION.replace('-SNAPSHOT', '') : VERSION

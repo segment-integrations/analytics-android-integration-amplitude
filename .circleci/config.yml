@@ -22,7 +22,7 @@ jobs:
           command: ./gradlew dependencies
       - run:
           name: Run tests
-          command: ./gradlew checkRelease testRelease --profile
+          command: ./gradlew check test --profile
       - save_cache:
           key: dependencies-{{ .Branch }}-{{ checksum "build.gradle" }}
           paths:
