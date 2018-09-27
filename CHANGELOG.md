@@ -1,4 +1,13 @@
 
+3.0.0 / 2018-09-27
+==================
+
+  * [PLATFORM-3118] Update all (#49)
+    * Update Amplitude's SDK
+    * Update Analytics
+    * Update test dependencies
+    * Update target SDK to 28
+
 2.0.2 / 2018-09-20
 ==================
 
