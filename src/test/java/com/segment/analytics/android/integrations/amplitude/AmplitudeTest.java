@@ -609,20 +609,31 @@ public class AmplitudeTest {
 
     integration.group(payload);
 
+    Identify expectedIdentify = new Identify();
+    expectedIdentify.set("library", "segment");
+
     verify(amplitude).setGroup("[Segment] Group", "testGroupId");
+    verify(amplitude).groupIdentify(eq("[Segment] Group"), eq("testGroupId"), identifyEq(expectedIdentify));
   }
 
   @Test
   public void groupWithGroupName() {
+    Traits traits = new Traits().putName("testName");
+
     GroupPayload payload = (new GroupPayload.Builder())
             .userId("foo")
         .groupId("testGroupId")
-        .traits(new Traits().putName("testName"))
+        .traits(traits)
         .build();
 
     integration.group(payload);
 
+    Identify expectedIdentify = new Identify();
+    expectedIdentify.set("library", "segment");
+    expectedIdentify.set("group_properties", traits.toJsonObject());
+
     verify(amplitude).setGroup("testName", "testGroupId");
+    verify(amplitude).groupIdentify(eq("testName"), eq("testGroupId"), identifyEq(expectedIdentify));
   }
 
   @Test
@@ -630,15 +641,22 @@ public class AmplitudeTest {
     integration.groupTypeTrait = "company";
     integration.groupValueTrait = "companyType";
 
+    Traits traits = new Traits().putValue("company", "Segment").putValue("companyType", "data").putValue("members", 80);
+
     GroupPayload payload = (new GroupPayload.Builder())
             .userId("foo")
         .groupId("testGroupId")
-        .traits(new Traits().putValue("company", "Segment").putValue("companyType", "data"))
+        .traits(traits)
         .build();
 
     integration.group(payload);
 
+    Identify expectedIdentify = new Identify();
+    expectedIdentify.set("library", "segment");
+    expectedIdentify.set("group_properties", traits.toJsonObject());
+
     verify(amplitude).setGroup("Segment", "data");
+    verify(amplitude).groupIdentify(eq("Segment"), eq("data"), identifyEq(expectedIdentify));
   }
 
   @Test

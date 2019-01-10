@@ -167,7 +167,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
       String key = it.next();
       try {
         Object value = groups.get(key);
-        setGroup(key, value);
+        amplitude.setGroup(key, value);
       } catch (JSONException e) {
         logger.error(e, "error reading %s from %s", key, groups);
       }
@@ -409,13 +409,17 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
       groupName = "[Segment] Group";
     }
 
-    assert groupName != null;
-    setGroup(groupName, groupValue);
-  }
-
-  private void setGroup(@NonNull String groupName, @NonNull Object groupValue) {
+    // Set group
     amplitude.setGroup(groupName, groupValue);
-    logger.verbose("AmplitudeClient.getInstance().setGroup(%s, %s);", groupName, groupValue);
+
+    // Set group properties
+    Identify groupIdentify = new Identify();
+    groupIdentify.set("library", "segment");
+    if (!isNullOrEmpty(traits)) {
+      groupIdentify.set("group_properties", traits.toJsonObject());
+    }
+
+    amplitude.groupIdentify(groupName, groupValue, groupIdentify);
   }
 
   @Override
