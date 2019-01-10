@@ -1,4 +1,11 @@
 
+3.0.1 / 2019-01-10
+==================
+
+  * [FCD-207] Implement groupIdentify to track group properties (#50)
+    * Update Amplitude SDK to 2.21.0
+    * Implement groupIdentify
+
 3.0.0 / 2018-09-27
 ==================
 
