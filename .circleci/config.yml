@@ -3,7 +3,7 @@ jobs:
   build:
     resource_class: small
     docker:
-      - image: circleci/android:api-28
+      - image: circleci/android:api-28-alpha
         environment:
           ANDROID_HOME: /home/circleci/android
           CIRCLE_JDK_VERSION: oraclejdk8
