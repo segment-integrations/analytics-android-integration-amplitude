@@ -50,7 +50,7 @@ dependencies {
     }
 
     api 'com.segment.analytics.android:analytics:4.3.1'
-    api 'com.amplitude:android-sdk:2.21.0'
+    api 'com.amplitude:android-sdk:2.23.1'
 
     testImplementation 'com.segment.analytics.android:analytics-tests:4.3.1'
     testImplementation 'junit:junit:4.12'
