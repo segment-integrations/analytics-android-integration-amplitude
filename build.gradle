@@ -50,12 +50,12 @@ dependencies {
     }
 
     api 'com.segment.analytics.android:analytics:4.3.1'
-    api 'com.amplitude:android-sdk:2.23.1'
+    api 'com.amplitude:android-sdk:2.23.2'
 
     testImplementation 'com.segment.analytics.android:analytics-tests:4.3.1'
     testImplementation 'junit:junit:4.12'
     testImplementation 'com.android.support.test:runner:1.0.2'
-    testImplementation 'org.mockito:mockito-core:2.22.0'
+    testImplementation 'org.mockito:mockito-core:3.1.0'
 
     // Required for local (non-android) testing
     testImplementation 'org.json:json:20180813'
