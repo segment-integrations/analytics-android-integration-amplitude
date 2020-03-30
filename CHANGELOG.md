@@ -1,3 +1,8 @@
+3.0.3 / 2020-03-30
+==================
+
+  * Support string array traits when either `traitsToIncrement` or `traitsToSetOnce` is set
+
 3.0.2 / 2019-09-16
 ==================
 

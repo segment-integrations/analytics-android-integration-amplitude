@@ -455,6 +455,7 @@ public class AmplitudeTest {
         .putValue("traitsToIncrement", Arrays.asList("double", "float", "integer", "long", "string"));
     integration.traitsToIncrement = getStringSet(settings, "traitsToIncrement");
 
+    String[] strArray = new String[]{"test"};
     double d = 100.0;
     float f = 100.0f;
     int i = 100;
@@ -463,6 +464,7 @@ public class AmplitudeTest {
 
     Traits traits = createTraits("foo")
         .putValue("anonymousId", "anonId")
+        .putValue("array", strArray)
         .putValue("double", d)
         .putValue("float", f)
         .putValue("integer", i)
@@ -474,6 +476,7 @@ public class AmplitudeTest {
     Identify expectedIdentify = new Identify();
     expectedIdentify.set("anonymousId", "anonId");
     expectedIdentify.set("userId", "foo");
+    expectedIdentify.set("array", strArray);
     expectedIdentify.add("double", d);
     expectedIdentify.add("float", f);
     expectedIdentify.add("integer", i);
@@ -489,6 +492,7 @@ public class AmplitudeTest {
         .putValue("traitsToSetOnce", Arrays.asList("double", "float", "integer", "long", "string"));
     integration.traitsToSetOnce = getStringSet(settings, "traitsToSetOnce");
 
+    String[] strArray = new String[]{"test"};
     double d = 100.0;
     float f = 100.0f;
     int i = 100;
@@ -497,6 +501,7 @@ public class AmplitudeTest {
 
     Traits traits = createTraits("foo")
         .putValue("anonymousId", "anonId")
+        .putValue("array", strArray)
         .putValue("double", d)
         .putValue("float", f)
         .putValue("integer", i)
@@ -509,6 +514,7 @@ public class AmplitudeTest {
     Identify expectedIdentify = new Identify();
     expectedIdentify.set("anonymousId", "anonId");
     expectedIdentify.set("userId", "foo");
+    expectedIdentify.set("array", strArray);
     expectedIdentify.setOnce("double", d);
     expectedIdentify.setOnce("float", f);
     expectedIdentify.setOnce("integer", i);
