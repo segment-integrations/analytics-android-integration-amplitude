@@ -92,7 +92,7 @@ public class AmplitudeIntegration extends Integration<AmplitudeClient> {
     trackNamedPages = settings.getBoolean("trackNamedPages", false);
     useLogRevenueV2 = settings.getBoolean("useLogRevenueV2", false);
     groupTypeTrait = settings.getString("groupTypeTrait");
-    groupValueTrait = settings.getString("groupTypeValue");
+    groupValueTrait = settings.getString("groupValueTrait");
     traitsToIncrement = getStringSet(settings, "traitsToIncrement");
     traitsToSetOnce = getStringSet(settings, "traitsToSetOnce");
     logger = analytics.logger(AMPLITUDE_KEY);
