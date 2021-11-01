@@ -86,8 +86,8 @@ public class AmplitudeSessionId implements Middleware {
 
   private long getSessionId() {
     if (sessionID != -1) {
-      // if sessionId is -1, then we reset to curTime (essentially creating a new session)
-      // TODO ask cody if -1 has a special value
+      // if sessionId is not -1, then we reset to curTime (essentially creating a new session)
+      // https://help.amplitude.com/hc/en-us/articles/115002323627-Tracking-sessions-in-Amplitude#h_a832c1ce-717a-4ab3-b205-9d7ed418ef1a
       long curTime = Calendar.getInstance().getTimeInMillis();
       if (curTime - sessionID >= FIRE_TIME) { // if FIRE_TIME ms have elapsed, reset the sessionId
         sessionID = curTime; // reset sessionId
