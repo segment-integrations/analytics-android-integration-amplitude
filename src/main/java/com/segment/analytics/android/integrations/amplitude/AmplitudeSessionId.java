@@ -8,22 +8,15 @@ import com.segment.analytics.integrations.GroupPayload;
 import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
-
-import java.util.Timer;
 import java.util.Calendar;
-import java.util.TimerTask;
 
 public class AmplitudeSessionId implements Middleware {
 
   private final static String KEY = "Actions Amplitude";
-  private boolean active = false;
 
-  private final static long FIRE_TIME = 300000;
-
-  private TimerTask timer;
+  private final static long FIRE_TIME = 300 * 1000; // 300 seconds
 
   private long sessionID = -1;
-
 
   @Override
   public void intercept(Chain chain) {
@@ -54,7 +47,7 @@ public class AmplitudeSessionId implements Middleware {
     return payload
         .toBuilder()
         .integration(KEY, new ValueMap()
-            .putValue("session_id", sessionID))
+            .putValue("session_id", getSessionId()))
         .build();
   }
 
@@ -84,31 +77,31 @@ public class AmplitudeSessionId implements Middleware {
   }
 
   private void onBackground() {
-    stopTimer();
+    stopSession();
   }
 
   private void onForeground() {
-    startTimer();
+    startSession();
   }
 
-  private void startTimer() {
+  private long getSessionId() {
+    if (sessionID != -1) {
+      // if sessionId is -1, then we reset to curTime (essentially creating a new session)
+      // TODO ask cody if -1 has a special value
+      long curTime = Calendar.getInstance().getTimeInMillis();
+      if (curTime - sessionID >= FIRE_TIME) { // if FIRE_TIME ms have elapsed, reset the sessionId
+        sessionID = curTime; // reset sessionId
+      }
+    }
+    return sessionID;
+  }
+
+  private void startSession() {
     // Set the session id
     sessionID = Calendar.getInstance().getTimeInMillis();
-
-    timer = new TimerTask() {
-      @Override
-      public void run() {
-        stopTimer();
-        startTimer();
-      }
-    };
-    new Timer().schedule(timer, FIRE_TIME);
   }
 
-  private void stopTimer() {
-    if (timer != null) {
-      timer.cancel();
-    }
+  private void stopSession() {
     sessionID = -1;
   }
 }
