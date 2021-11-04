@@ -1,3 +1,8 @@
+3.1.0 / 2021-11-04
+==================
+
+* Add Amplitude Session ID middleware for [Destination Actions](https://segment.com/docs/connections/destinations/catalog/actions-amplitude/)
+
 3.0.3 / 2020-03-30
 ==================
 
