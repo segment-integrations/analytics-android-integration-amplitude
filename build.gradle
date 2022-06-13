@@ -2,12 +2,11 @@
 buildscript {
     repositories {
         mavenCentral()
-        jcenter()
         google()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.0'
+        classpath 'com.android.tools.build:gradle:3.2.1'
         classpath 'com.f2prateek.javafmt:javafmt:0.1.6'
         classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.11.0'
     }
@@ -21,7 +20,7 @@ apply plugin: 'com.f2prateek.javafmt'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.2'
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
         minSdkVersion 14
@@ -45,12 +44,12 @@ android {
 dependencies {
     repositories {
         mavenCentral()
-        jcenter()
         google()
     }
 
-    api 'com.segment.analytics.android:analytics:4.3.1'
+    api 'com.segment.analytics.android:analytics:4.10.4'
     api 'com.amplitude:android-sdk:2.23.1'
+    implementation 'com.android.support:support-annotations:28.0.0'
 
     testImplementation 'com.segment.analytics.android:analytics-tests:4.3.1'
     testImplementation 'junit:junit:4.12'
