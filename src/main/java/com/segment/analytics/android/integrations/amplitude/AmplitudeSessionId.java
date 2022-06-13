@@ -12,9 +12,9 @@ import java.util.Calendar;
 
 public class AmplitudeSessionId implements Middleware {
 
-  private final static String KEY = "Actions Amplitude";
+  private static final String KEY = "Actions Amplitude";
 
-  private final static long FIRE_TIME = 300 * 1000; // 300 seconds
+  private static final long FIRE_TIME = 300 * 1000; // 300 seconds
 
   private long sessionID = -1;
 
@@ -46,8 +46,7 @@ public class AmplitudeSessionId implements Middleware {
   private BasePayload insertSession(BasePayload payload) {
     return payload
         .toBuilder()
-        .integration(KEY, new ValueMap()
-            .putValue("session_id", getSessionId()))
+        .integration(KEY, new ValueMap().putValue("session_id", getSessionId()))
         .build();
   }
 
