@@ -1,3 +1,7 @@
+3.1.1 / 2022-06-13
+==================
+* [Fix](https://github.com/segment-integrations/analytics-android-integration-amplitude/pull/61): Upgrade Segment SDK version
+
 3.1.0 / 2021-11-04
 ==================
 
