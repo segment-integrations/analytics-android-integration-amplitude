@@ -1,7 +1,7 @@
 package com.segment.analytics.android.integrations.amplitude;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplitude.api.Amplitude;
 import com.amplitude.api.AmplitudeClient;
