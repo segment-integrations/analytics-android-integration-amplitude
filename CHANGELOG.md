@@ -1,3 +1,7 @@
+3.1.2 / 2022-06-22
+==================
+* Fix: Packaging issue where androidx was causing conflicts is now fixed
+
 3.1.1 / 2022-06-13
 ==================
 * [Fix](https://github.com/segment-integrations/analytics-android-integration-amplitude/pull/61): Upgrade Segment SDK version
