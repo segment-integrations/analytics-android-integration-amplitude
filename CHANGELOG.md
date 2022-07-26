@@ -1,3 +1,16 @@
+3.1.2 / 2022-06-22
+==================
+* Fix: Packaging issue where androidx was causing conflicts is now fixed
+
+3.1.1 / 2022-06-13
+==================
+* [Fix](https://github.com/segment-integrations/analytics-android-integration-amplitude/pull/61): Upgrade Segment SDK version
+
+3.1.0 / 2021-11-04
+==================
+
+* Add Amplitude Session ID middleware for [Destination Actions](https://segment.com/docs/connections/destinations/catalog/actions-amplitude/)
+
 3.0.3 / 2020-03-30
 ==================
 
